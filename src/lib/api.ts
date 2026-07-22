@@ -1,0 +1,70 @@
+// Thin client for the Bingo Rush game server (FastAPI + WebSocket).
+//
+// Base URL is configurable via VITE_API_URL (see .env.example); it defaults to
+// the deployed backend behind Traefik. NOTE: if bingo.jfmcss.com is proxied by
+// Cloudflare with a bot challenge, fetch/WebSocket calls may be blocked — relax
+// the challenge for this hostname or point VITE_API_URL at the origin.
+
+const API_BASE: string =
+  ((import.meta as any).env?.VITE_API_URL as string) || "https://bingo.jfmcss.com";
+
+export const apiBase = API_BASE;
+
+export interface Room {
+  id: string;
+  name: string;
+  emoji: string;
+  entryFee: number;
+  capacity: number;
+  difficulty: string;
+  advertisedPrize: number;
+  rakeBps: number;
+  payoutWeightsBps: number[];
+}
+
+export interface CreatedRound {
+  roundId: string;
+  commitment: string;
+  entryFee: number;
+  rakeBps: number;
+  payoutWeightsBps: number[];
+}
+
+async function jget<T>(path: string): Promise<T> {
+  const r = await fetch(API_BASE + path);
+  if (!r.ok) throw new Error(`GET ${path} -> ${r.status}`);
+  return r.json() as Promise<T>;
+}
+
+async function jpost<T>(path: string, body?: unknown): Promise<T> {
+  const r = await fetch(API_BASE + path, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body ?? {}),
+  });
+  if (!r.ok) throw new Error(`POST ${path} -> ${r.status}`);
+  return r.json() as Promise<T>;
+}
+
+export const getRooms = () => jget<Room[]>("/rooms");
+export const getShop = () => jget<Record<string, unknown[]>>("/shop");
+
+export const createRound = (opts?: {
+  entry_fee?: number;
+  rake_bps?: number;
+  payout_weights_bps?: number[];
+}) => jpost<CreatedRound>("/rounds", opts);
+
+export const joinRound = (roundId: string, numCards: number) =>
+  jpost<{ player: string; numCards: number }>(`/rounds/${roundId}/join`, {
+    num_cards: numCards,
+  });
+
+// WebSocket for a round's live ball draw. Messages:
+//   { type:"ball", index, letter, number }
+//   { type:"bingo", balls, winners:[addr] }
+//   { type:"settled", balls, winners, payouts:{addr:amount} }
+export function roundSocket(roundId: string): WebSocket {
+  const wsBase = API_BASE.replace(/^http/, "ws");
+  return new WebSocket(`${wsBase}/ws/rounds/${roundId}`);
+}
