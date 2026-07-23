@@ -355,6 +355,7 @@ function LobbyScreen({ go, setSess }: { go: (s: Screen) => void; setSess: (s: Se
 function CardsScreen({ go, sess, setSess }: { go: (s: Screen) => void; sess: Session; setSess: (s: Session) => void }) {
   const [sel, setSel] = useState(sess.numCards || 1);
   const [busy, setBusy] = useState(false);
+  const [step, setStep] = useState("");
   const [err, setErr] = useState("");
   const costs   = [100, 180, 250, 320];
   const rewards = ["2,500", "5,000", "8,000", "12,000"];
@@ -364,8 +365,11 @@ function CardsScreen({ go, sess, setSess }: { go: (s: Screen) => void; sess: Ses
       setBusy(true); setErr("");
       const weights = (sess.weights && sess.weights.length > 1) ? sess.weights : [10000];
       const entry = Math.round((sess.entryFee ?? 100) * 1_000_000); // base entry (1 card) in uCNPY
+      setStep("Opening round on-chain… (1/3)");
       const r = await createRound({ entry_fee: entry, rake_bps: sess.rakeBps ?? 1000, payout_weights_bps: weights });
+      setStep("Escrowing your entry… (2/3)");
       const me = await joinRound(r.roundId, sel);   // you
+      setStep("Adding an opponent… (3/3)");
       await joinRound(r.roundId, 1);                // one bot competitor
       setSess({ ...sess, numCards: sel, roundId: r.roundId, playerAddr: me.player, cards: me.cards });
       go("game");
@@ -445,7 +449,7 @@ function CardsScreen({ go, sess, setSess }: { go: (s: Screen) => void; sess: Ses
 
       <div style={{ padding: "0 16px 24px" }}>
         <button onClick={start} disabled={busy} style={{ width: "100%", padding: "20px 0", borderRadius: 28, background: busy ? "rgba(139,92,246,0.5)" : "linear-gradient(135deg,#8B5CF6,#EC4899)", color: "white", fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 24, border: "none", cursor: busy ? "default" : "pointer", boxShadow: "0 10px 36px #8B5CF648" }}>
-          {busy ? "Opening round on-chain…" : "Start Game 🎯"}
+          {busy ? (step || "Opening round on-chain…") : "Start Game 🎯"}
         </button>
         {err && <div style={{ marginTop: 10, fontFamily: "Nunito, sans-serif", fontSize: 12, color: "#DC2626", textAlign: "center" }}>{err}</div>}
       </div>
