@@ -1,13 +1,32 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { ReactNode } from "react";
 import {
   Settings, Play, ArrowLeft, Check,
   Volume2, VolumeX, MessageCircle, ChevronRight,
 } from "lucide-react";
+import { apiBase, createRound, joinRound, roundSocket, getRooms, getShop } from "../lib/api";
+import { waitForFleet, connectWallet, walletBalance, disconnectWallet } from "../lib/wallet";
+
+// Shared session for the real on-chain play flow (Lobby → Cards → Game → Win).
+type Session = {
+  roomName?: string;
+  roomColor?: string;
+  entryFee?: number;      // display coins
+  rakeBps?: number;
+  weights?: number[];
+  numCards: number;
+  roundId?: string;
+  playerAddr?: string;
+  cards?: number[][][];   // player's real card grids (row-major 5x5, 0 = FREE)
+  payouts?: Record<string, number>;
+  winners?: string[];
+  wonCoins?: number;      // coins the player won at settle (0 if lost)
+};
+const DEFAULT_SESSION: Session = { numCards: 1 };
 
 type Screen =
   | "splash" | "home" | "lobby" | "cards"
-  | "game" | "win" | "lose" | "shop" | "profile" | "daily";
+  | "game" | "win" | "lose" | "shop" | "profile" | "daily" | "live";
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const COLS = ["B", "I", "N", "G", "O"];
@@ -249,15 +268,32 @@ function HomeScreen({ go }: { go: (s: Screen) => void }) {
 }
 
 // ─── 3. Lobby ─────────────────────────────────────────────────────────────────
-function LobbyScreen({ go }: { go: (s: Screen) => void }) {
+const ROOM_COLORS = ["#3B82F6", "#EC4899", "#F59E0B", "#8B5CF6"];
+const MOCK_ROOMS = [
+  { id: "classic", name: "Classic Room", emoji: "🎱", entryFee: 100,  advertisedPrize: 2500,  capacity: 20, difficulty: "Easy",   rakeBps: 1000, payoutWeightsBps: [10000] },
+  { id: "speed",   name: "Speed Bingo",  emoji: "⚡",  entryFee: 250,  advertisedPrize: 6000,  capacity: 20, difficulty: "Medium", rakeBps: 1000, payoutWeightsBps: [10000] },
+  { id: "jackpot", name: "Jackpot Room", emoji: "💰", entryFee: 500,  advertisedPrize: 25000, capacity: 20, difficulty: "Hard",   rakeBps: 500,  payoutWeightsBps: [7000, 2000, 1000] },
+  { id: "vip",     name: "VIP Lounge",   emoji: "👑", entryFee: 1000, advertisedPrize: 50000, capacity: 10, difficulty: "Elite",  rakeBps: 500,  payoutWeightsBps: [6000, 2500, 1500] },
+];
+function LobbyScreen({ go, setSess }: { go: (s: Screen) => void; setSess: (s: Session) => void }) {
   const [tab, setTab] = useState(0);
   const tabs = ["Classic", "Fast", "Jackpot", "VIP"];
-  const rooms = [
-    { n: "Classic Room", e: "🎱", cost: 100,  prize: "2,500",  pl: "8/20",  d: "Easy",   c: "#3B82F6" },
-    { n: "Speed Bingo",  e: "⚡",  cost: 250,  prize: "6,000",  pl: "15/20", d: "Medium", c: "#EC4899" },
-    { n: "Jackpot Room", e: "💰", cost: 500,  prize: "25,000", pl: "20/20", d: "Hard",   c: "#F59E0B" },
-    { n: "VIP Lounge",   e: "👑", cost: 1000, prize: "50,000", pl: "6/10",  d: "Elite",  c: "#8B5CF6" },
-  ];
+  const [rooms, setRooms] = useState<any[]>(MOCK_ROOMS);
+  const [live, setLive] = useState(false);
+
+  useEffect(() => {
+    getRooms().then(r => { if (Array.isArray(r) && r.length) { setRooms(r); setLive(true); } }).catch(() => {});
+  }, []);
+
+  const join = (room: any, color: string) => {
+    setSess({
+      ...DEFAULT_SESSION,
+      roomName: room.name, roomColor: color, entryFee: room.entryFee,
+      rakeBps: room.rakeBps, weights: room.payoutWeightsBps,
+    });
+    go("cards");
+  };
+
   return (
     <PhoneScreen bg="linear-gradient(180deg,#4C1D95 0%,#F5F3FF 36%)">
       <StatusBar />
@@ -274,45 +310,69 @@ function LobbyScreen({ go }: { go: (s: Screen) => void }) {
         ))}
       </div>
 
+      <div style={{ padding: "0 16px 8px", fontFamily: "Nunito, sans-serif", fontSize: 11, color: live ? "#10B981" : "rgba(255,255,255,0.5)", fontWeight: 700 }}>
+        {live ? "● live rooms from backend" : "○ demo rooms (backend offline)"}
+      </div>
+
       {/* Room cards */}
       <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: "0 16px 24px" }}>
-        {rooms.map(room => (
-          <div key={room.n} style={{ borderRadius: 28, padding: 16, background: "white", boxShadow: "0 4px 22px rgba(0,0,0,0.07)" }}>
+        {rooms.map((room, idx) => {
+          const c = ROOM_COLORS[idx % ROOM_COLORS.length];
+          const prize = Number(room.advertisedPrize || 0).toLocaleString();
+          return (
+          <div key={room.id || room.name} style={{ borderRadius: 28, padding: 16, background: "white", boxShadow: "0 4px 22px rgba(0,0,0,0.07)" }}>
             <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 12 }}>
-              <div style={{ width: 52, height: 52, borderRadius: 16, background: `${room.c}18`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, flexShrink: 0 }}>{room.e}</div>
+              <div style={{ width: 52, height: 52, borderRadius: 16, background: `${c}18`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, flexShrink: 0 }}>{room.emoji}</div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 18, color: "#1A0A2E" }}>{room.n}</div>
+                <div style={{ fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 18, color: "#1A0A2E" }}>{room.name}</div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
-                  <span style={{ padding: "2px 8px", borderRadius: 100, background: `${room.c}18`, color: room.c, fontFamily: "Nunito, sans-serif", fontWeight: 800, fontSize: 11 }}>{room.d}</span>
-                  <span style={{ fontFamily: "Nunito, sans-serif", fontSize: 12, color: "#6B7280" }}>👥 {room.pl}</span>
+                  <span style={{ padding: "2px 8px", borderRadius: 100, background: `${c}18`, color: c, fontFamily: "Nunito, sans-serif", fontWeight: 800, fontSize: 11 }}>{room.difficulty}</span>
+                  <span style={{ fontFamily: "Nunito, sans-serif", fontSize: 12, color: "#6B7280" }}>👥 {room.capacity} max</span>
                 </div>
               </div>
             </div>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div style={{ display: "flex", gap: 20 }}>
-                {[{ label: "Entry", val: `🪙 ${room.cost}` }, { label: "Prize Pool", val: `🪙 ${room.prize}` }].map(x => (
+                {[{ label: "Entry", val: `🪙 ${room.entryFee}` }, { label: "Max Prize", val: `🪙 ${prize}` }].map(x => (
                   <div key={x.label}>
                     <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 11, color: "#9CA3AF" }}>{x.label}</div>
                     <div style={{ fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 15, color: "#374151" }}>{x.val}</div>
                   </div>
                 ))}
               </div>
-              <button onClick={() => go("cards")} style={{ padding: "10px 22px", borderRadius: 100, background: room.c, color: "white", fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 16, border: "none", cursor: "pointer", boxShadow: `0 4px 18px ${room.c}58` }}>
+              <button onClick={() => join(room, c)} style={{ padding: "10px 22px", borderRadius: 100, background: c, color: "white", fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 16, border: "none", cursor: "pointer", boxShadow: `0 4px 18px ${c}58` }}>
                 Join ▶
               </button>
             </div>
           </div>
-        ))}
+        );})}
       </div>
     </PhoneScreen>
   );
 }
 
 // ─── 4. Card Selection ────────────────────────────────────────────────────────
-function CardsScreen({ go }: { go: (s: Screen) => void }) {
-  const [sel, setSel] = useState(1);
+function CardsScreen({ go, sess, setSess }: { go: (s: Screen) => void; sess: Session; setSess: (s: Session) => void }) {
+  const [sel, setSel] = useState(sess.numCards || 1);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
   const costs   = [100, 180, 250, 320];
   const rewards = ["2,500", "5,000", "8,000", "12,000"];
+
+  async function start() {
+    try {
+      setBusy(true); setErr("");
+      const weights = (sess.weights && sess.weights.length > 1) ? sess.weights : [10000];
+      const entry = Math.round((sess.entryFee ?? 100) * 1_000_000); // base entry (1 card) in uCNPY
+      const r = await createRound({ entry_fee: entry, rake_bps: sess.rakeBps ?? 1000, payout_weights_bps: weights });
+      const me = await joinRound(r.roundId, sel);   // you
+      await joinRound(r.roundId, 1);                // one bot competitor
+      setSess({ ...sess, numCards: sel, roundId: r.roundId, playerAddr: me.player, cards: me.cards });
+      go("game");
+    } catch (e: any) {
+      setErr(String(e?.message || e)); setBusy(false);
+    }
+  }
 
   const MiniCard = ({ tilt = 0 }: { tilt?: number }) => (
     <div style={{ borderRadius: 14, overflow: "hidden", border: "2.5px solid #7C3AED", background: "white", transform: `rotate(${tilt}deg)`, boxShadow: "0 6px 22px rgba(0,0,0,0.14)" }}>
@@ -384,23 +444,64 @@ function CardsScreen({ go }: { go: (s: Screen) => void }) {
       </div>
 
       <div style={{ padding: "0 16px 24px" }}>
-        <button onClick={() => go("game")} style={{ width: "100%", padding: "20px 0", borderRadius: 28, background: "linear-gradient(135deg,#8B5CF6,#EC4899)", color: "white", fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 24, border: "none", cursor: "pointer", boxShadow: "0 10px 36px #8B5CF648" }}>
-          Start Game 🎯
+        <button onClick={start} disabled={busy} style={{ width: "100%", padding: "20px 0", borderRadius: 28, background: busy ? "rgba(139,92,246,0.5)" : "linear-gradient(135deg,#8B5CF6,#EC4899)", color: "white", fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 24, border: "none", cursor: busy ? "default" : "pointer", boxShadow: "0 10px 36px #8B5CF648" }}>
+          {busy ? "Opening round on-chain…" : "Start Game 🎯"}
         </button>
+        {err && <div style={{ marginTop: 10, fontFamily: "Nunito, sans-serif", fontSize: 12, color: "#DC2626", textAlign: "center" }}>{err}</div>}
       </div>
     </PhoneScreen>
   );
 }
 
 // ─── 5. Game ──────────────────────────────────────────────────────────────────
-function GameScreen({ go }: { go: (s: Screen) => void }) {
-  const [marked, setMarked] = useState(new Set(INIT_MARKED));
+function GameScreen({ go, sess, setSess }: { go: (s: Screen) => void; sess: Session; setSess: (s: Session) => void }) {
+  const real = !!(sess.roundId && sess.cards && sess.cards.length);
+  // FREE center is 0 (backend) or -1 (mock) → normalize to 0 for rendering.
+  const grid: number[][] = real ? sess.cards![0] : CARD.map(r => r.map(n => (n === -1 ? 0 : n)));
+
+  const [marked, setMarked] = useState<Set<number>>(new Set(real ? [] : INIT_MARKED));
+  const [current, setCurrent] = useState<{ l: string; n: number } | null>(real ? null : { l: "B", n: 12 });
+  const [recent, setRecent] = useState<{ l: string; n: number }[]>(real ? [] : RECENT);
+  const [count, setCount] = useState(0);
+  const [statusMsg, setStatusMsg] = useState(real ? "Waiting for the draw…" : "");
   const [sound, setSound] = useState(true);
+  const wsRef = useRef<WebSocket | null>(null);
+
+  useEffect(() => {
+    if (!real) return;
+    const ws = roundSocket(sess.roundId!);
+    wsRef.current = ws;
+    ws.onmessage = (ev) => {
+      const m = JSON.parse(ev.data);
+      if (m.type === "ball") {
+        setCurrent({ l: m.letter, n: m.number });
+        setCount(m.index);
+        setRecent(p => [{ l: m.letter, n: m.number }, ...p].slice(0, 5));
+        setMarked(p => { const s = new Set(p); s.add(m.number); return s; });
+        setStatusMsg("Drawing…");
+      } else if (m.type === "bingo") {
+        setStatusMsg(`BINGO at ball ${m.balls}! Settling on-chain…`);
+      } else if (m.type === "settled") {
+        const payouts = m.payouts || {};
+        const mine = payouts[sess.playerAddr || ""] || 0;
+        setSess({ ...sess, payouts, winners: m.winners || [], wonCoins: Math.round(mine / 1_000_000) });
+        setStatusMsg("Settled ✓");
+        setTimeout(() => go(mine > 0 ? "win" : "lose"), 1000);
+      }
+    };
+    ws.onerror = () => setStatusMsg("connection error — check backend");
+    return () => ws.close();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const toggle = (num: number) => {
-    if (num === -1) return;
+    if (real || num === 0) return; // real mode auto-marks from the on-chain draw
     setMarked(prev => { const n = new Set(prev); n.has(num) ? n.delete(num) : n.add(num); return n; });
   };
+
+  const pills = real
+    ? [{ e: "🔢", v: `${count}` }, { e: "🃏", v: `${sess.numCards}` }, { e: "⛓️", v: "live" }]
+    : [{ e: "👥", v: "12 left" }, { e: "🏆", v: "2,500" }, { e: "⏱️", v: "1:47" }];
 
   return (
     <PhoneScreen bg="linear-gradient(180deg,#1E1B4B 0%,#2D1B69 100%)">
@@ -410,8 +511,8 @@ function GameScreen({ go }: { go: (s: Screen) => void }) {
         <button onClick={() => go("lobby")} style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,0.1)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
           <ArrowLeft size={15} color="white" />
         </button>
-        <span style={{ fontFamily: "Fredoka, sans-serif", color: "white", fontWeight: 700, fontSize: 14, flex: 1 }}>Classic Room</span>
-        {[{ e: "👥", v: "12 left" }, { e: "🏆", v: "2,500" }, { e: "⏱️", v: "1:47" }].map(x => (
+        <span style={{ fontFamily: "Fredoka, sans-serif", color: "white", fontWeight: 700, fontSize: 14, flex: 1 }}>{sess.roomName || "Classic Room"}</span>
+        {pills.map(x => (
           <div key={x.e} style={{ display: "flex", alignItems: "center", gap: 3, padding: "4px 8px", borderRadius: 100, background: "rgba(255,255,255,0.1)", fontFamily: "Nunito, sans-serif", fontSize: 11, color: "white", fontWeight: 600 }}>
             <span>{x.e}</span><span>{x.v}</span>
           </div>
@@ -420,13 +521,15 @@ function GameScreen({ go }: { go: (s: Screen) => void }) {
 
       {/* Current ball display */}
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "8px 0 6px" }}>
-        <span style={{ fontFamily: "Nunito, sans-serif", fontSize: 10, color: "rgba(255,255,255,0.42)", letterSpacing: 2.5, textTransform: "uppercase", marginBottom: 6 }}>Current Ball</span>
-        <BingoBall letter="B" number={12} size={76} />
+        <span style={{ fontFamily: "Nunito, sans-serif", fontSize: 10, color: "rgba(255,255,255,0.42)", letterSpacing: 2.5, textTransform: "uppercase", marginBottom: 6 }}>{real ? (statusMsg || "Current Ball") : "Current Ball"}</span>
+        {current ? <BingoBall letter={current.l} number={current.n} size={76} /> : (
+          <div style={{ width: 76, height: 76, borderRadius: "50%", background: "rgba(255,255,255,0.08)", border: "3px solid rgba(255,255,255,0.15)" }} />
+        )}
       </div>
 
       {/* Recent balls row */}
-      <div style={{ display: "flex", justifyContent: "center", gap: 8, padding: "4px 0 10px" }}>
-        {RECENT.map((b, i) => <BingoBall key={i} letter={b.l} number={b.n} size={33} dim={i > 2} />)}
+      <div style={{ display: "flex", justifyContent: "center", gap: 8, padding: "4px 0 10px", minHeight: 40 }}>
+        {recent.map((b, i) => <BingoBall key={i} letter={b.l} number={b.n} size={33} dim={i > 2} />)}
       </div>
 
       {/* Bingo card */}
@@ -441,16 +544,16 @@ function GameScreen({ go }: { go: (s: Screen) => void }) {
         </div>
         {/* Grid cells */}
         <div style={{ background: "white", padding: 7, display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 4 }}>
-          {CARD.flatMap((row, ri) =>
+          {grid.flatMap((row, ri) =>
             row.map((num, ci) => {
-              const free = num === -1;
+              const free = num === 0;
               const mk = free || marked.has(num);
               return (
                 <button key={`${ri}-${ci}`} onClick={() => toggle(num)} style={{
                   aspectRatio: "1", borderRadius: 10, border: `2px solid ${mk ? COL_COLORS[ci] : "#E9EAEC"}`,
                   background: mk ? `${COL_COLORS[ci]}1E` : "#FAFAFA",
                   display: "flex", alignItems: "center", justifyContent: "center",
-                  flexDirection: "column", cursor: "pointer", position: "relative",
+                  flexDirection: "column", cursor: real ? "default" : "pointer", position: "relative",
                   transition: "all 0.15s",
                 }}>
                   {free ? (
@@ -472,11 +575,17 @@ function GameScreen({ go }: { go: (s: Screen) => void }) {
         </div>
       </div>
 
-      {/* BINGO button */}
+      {/* BINGO button (mock) / on-chain status (real) */}
       <div style={{ padding: "10px 10px 6px" }}>
-        <button onClick={() => go("win")} style={{ width: "100%", padding: "13px 0", borderRadius: 20, background: "linear-gradient(135deg,#FBBF24,#F59E0B)", fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 22, color: "#1A0A2E", border: "none", cursor: "pointer", boxShadow: "0 4px 22px #FBBF2458" }}>
-          🎉  BINGO!
-        </button>
+        {real ? (
+          <div style={{ width: "100%", padding: "13px 0", borderRadius: 20, background: "rgba(255,255,255,0.1)", fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 16, color: "white", textAlign: "center" }}>
+            ⛓️ {statusMsg || "Auto-marked & settled on-chain"}
+          </div>
+        ) : (
+          <button onClick={() => go("win")} style={{ width: "100%", padding: "13px 0", borderRadius: 20, background: "linear-gradient(135deg,#FBBF24,#F59E0B)", fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 22, color: "#1A0A2E", border: "none", cursor: "pointer", boxShadow: "0 4px 22px #FBBF2458" }}>
+            🎉  BINGO!
+          </button>
+        )}
       </div>
 
       {/* Secondary controls */}
@@ -496,7 +605,8 @@ function GameScreen({ go }: { go: (s: Screen) => void }) {
 }
 
 // ─── 6. Win ───────────────────────────────────────────────────────────────────
-function WinScreen({ go }: { go: (s: Screen) => void }) {
+function WinScreen({ go, sess }: { go: (s: Screen) => void; sess: Session }) {
+  const won = sess.wonCoins;
   return (
     <PhoneScreen bg="linear-gradient(155deg,#1E1B4B 0%,#4C1D95 50%,#7C3AED 100%)">
       <StatusBar />
@@ -513,15 +623,15 @@ function WinScreen({ go }: { go: (s: Screen) => void }) {
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "52px 24px 0" }}>
         <span style={{ fontSize: 72, marginBottom: 4, filter: "drop-shadow(0 8px 28px #FBBF2488)" }}>🏆</span>
         <h1 style={{ fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 60, color: "#FBBF24", textShadow: "0 0 48px #FBBF2485, 0 4px 0 #D97706", lineHeight: 1, margin: "0 0 8px" }}>BINGO!</h1>
-        <p style={{ fontFamily: "Nunito, sans-serif", color: "rgba(255,255,255,0.72)", fontSize: 17, marginBottom: 28, textAlign: "center" }}>You won the Classic Room! 🎊</p>
+        <p style={{ fontFamily: "Nunito, sans-serif", color: "rgba(255,255,255,0.72)", fontSize: 17, marginBottom: 28, textAlign: "center" }}>You won {sess.roomName ? `the ${sess.roomName}` : "the Classic Room"}! 🎊</p>
 
         {/* Rewards panel */}
         <div style={{ width: "100%", borderRadius: 28, padding: "4px 20px", marginBottom: 16, background: "rgba(255,255,255,0.09)", backdropFilter: "blur(12px)", border: "1px solid rgba(255,255,255,0.16)" }}>
           {([
-            { e: "🪙", l: "Coins Won",  v: "+2,500",  c: "#FBBF24" },
+            { e: "🪙", l: "Coins Won",  v: `+${(won ?? 2500).toLocaleString()}`,  c: "#FBBF24" },
             { e: "⭐", l: "XP Gained",  v: "+450 XP", c: "#A5F3FC" },
-            { e: "🏅", l: "Ranking",    v: "#4 of 20", c: "#C4B5FD" },
-          ] as const).map(r => (
+            { e: "🏅", l: won !== undefined ? "Settled" : "Ranking", v: won !== undefined ? "on-chain ✓" : "#4 of 20", c: "#C4B5FD" },
+          ]).map(r => (
             <div key={r.l} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "13px 0", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <span style={{ fontSize: 24 }}>{r.e}</span>
@@ -593,7 +703,7 @@ function LoseScreen({ go }: { go: (s: Screen) => void }) {
 function ShopScreen({ go }: { go: (s: Screen) => void }) {
   const [tab, setTab] = useState(0);
   const tabs = ["Coins", "Gems", "Boosters", "Themes"];
-  const items = [
+  const [items, setItems] = useState<any[][]>([
     [
       { n: "Starter Pack",  e: "💰", p: "$0.99",  a: "500 coins",       b: null          },
       { n: "Coin Bundle",   e: "🪙", p: "$4.99",  a: "3,000 coins",     b: "POPULAR"     },
@@ -618,7 +728,19 @@ function ShopScreen({ go }: { go: (s: Screen) => void }) {
       { n: "Gold Classic",  e: "🥇", p: "💎 150", a: "Luxury gold skin",  b: null        },
       { n: "Candy Land",    e: "🍭", p: "💎 60",  a: "Sweet color skin",  b: null        },
     ],
-  ];
+  ]);
+
+  useEffect(() => {
+    getShop().then((s: any) => {
+      const money = (it: any) => it.price_kind === "usd" ? `$${(it.price / 100).toFixed(2)}` : it.price_kind === "gems" ? `💎 ${it.price}` : `🪙 ${it.price}`;
+      const desc = (it: any) => it.grants && (it.grants.coins || it.grants.gems)
+        ? `${(it.grants.coins || it.grants.gems).toLocaleString()} ${it.grants.coins ? "coins" : "gems"}`
+        : (it.effect || "");
+      const map = (arr: any[]) => (arr || []).map((it: any) => ({ n: it.name, e: it.emoji, p: money(it), a: desc(it), b: it.badge ?? null }));
+      if (s && s.coins) setItems([map(s.coins), map(s.gems), map(s.boosters), map(s.themes)]);
+    }).catch(() => {});
+  }, []);
+
   const badgeCol = (b: string | null) => ({ "BEST VALUE": "#10B981", "RARE": "#8B5CF6", "NEW": "#3B82F6" }[b ?? ""] ?? "#EC4899");
 
   return (
@@ -839,6 +961,162 @@ function DailyScreen({ go }: { go: (s: Screen) => void }) {
   );
 }
 
+// ─── FleetWallet connect chip ───────────────────────────────────────────────────
+function WalletChip() {
+  const [avail, setAvail] = useState(false);
+  const [addr, setAddr] = useState<string | null>(null);
+  const [bal, setBal] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+
+  useEffect(() => { waitForFleet(700).then(setAvail); }, []);
+
+  async function connect() {
+    try {
+      setBusy(true); setErr("");
+      const a = await connectWallet();
+      setAddr(a.address);
+      const b = await walletBalance();
+      if (b) setBal(`${b.whole} ${b.symbol}`);
+    } catch (e: any) {
+      setErr(String(e?.message || e));
+    } finally { setBusy(false); }
+  }
+  async function disconnect() { await disconnectWallet(); setAddr(null); setBal(null); }
+
+  const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
+  const base = { display: "flex", alignItems: "center", gap: 8, margin: "0 16px 12px", padding: "10px 14px", borderRadius: 16, fontFamily: "Nunito, sans-serif", fontSize: 12 } as const;
+
+  if (addr) {
+    return (
+      <div style={{ ...base, background: "rgba(16,185,129,0.16)", border: "1px solid rgba(16,185,129,0.3)", color: "white" }}>
+        <span style={{ fontSize: 14 }}>🦊</span>
+        <span style={{ fontWeight: 800 }}>{short(addr)}</span>
+        <span style={{ opacity: 0.75 }}>· {bal ?? "— CNPY"}</span>
+        <button onClick={disconnect} style={{ marginLeft: "auto", background: "rgba(255,255,255,0.14)", border: "none", color: "white", borderRadius: 10, padding: "4px 10px", cursor: "pointer", fontFamily: "Nunito, sans-serif", fontWeight: 700, fontSize: 11 }}>Disconnect</button>
+      </div>
+    );
+  }
+  return (
+    <div style={{ ...base, flexDirection: "column", alignItems: "stretch", gap: 6, background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)" }}>
+      <button onClick={connect} disabled={!avail || busy} style={{
+        padding: "10px 0", borderRadius: 12, border: "none", cursor: avail && !busy ? "pointer" : "default",
+        background: avail ? "linear-gradient(135deg,#6366F1,#8B5CF6)" : "rgba(255,255,255,0.12)",
+        color: "white", fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 14,
+      }}>
+        {busy ? "Connecting…" : avail ? "🦊 Connect FleetWallet" : "FleetWallet not detected"}
+      </button>
+      {!avail && <span style={{ color: "rgba(255,255,255,0.5)", textAlign: "center" }}>Install the FleetWallet Chrome extension to connect a Canopy wallet.</span>}
+      {err && <span style={{ color: "#FCA5A5", textAlign: "center" }}>{err}</span>}
+    </div>
+  );
+}
+
+// ─── 11. Live (real backend + on-chain) ────────────────────────────────────────
+function LiveScreen({ go }: { go: (s: Screen) => void }) {
+  type St = "idle" | "running" | "settled" | "error";
+  const [status, setStatus] = useState<St>("idle");
+  const [msg, setMsg] = useState("Play a real round: opens on-chain, escrows entries, draws live, and settles on-chain.");
+  const [ball, setBall] = useState<{ l: string; n: number } | null>(null);
+  const [recent, setRecent] = useState<{ l: string; n: number }[]>([]);
+  const [count, setCount] = useState(0);
+  const [winners, setWinners] = useState<string[]>([]);
+  const [payouts, setPayouts] = useState<Record<string, number>>({});
+  const wsRef = useRef<WebSocket | null>(null);
+
+  useEffect(() => () => wsRef.current?.close(), []);
+
+  async function start() {
+    try {
+      setStatus("running"); setBall(null); setRecent([]); setCount(0); setWinners([]); setPayouts({});
+      setMsg("Opening round on-chain (commit seed)…");
+      const r = await createRound({ payout_weights_bps: [7000, 3000] });
+      setMsg("Players joining (entries escrowed on-chain)…");
+      await joinRound(r.roundId, 2);
+      await joinRound(r.roundId, 1);
+      setMsg("Drawing balls…");
+      const ws = roundSocket(r.roundId);
+      wsRef.current = ws;
+      ws.onmessage = (ev) => {
+        const m = JSON.parse(ev.data);
+        if (m.type === "ball") {
+          setBall({ l: m.letter, n: m.number }); setCount(m.index);
+          setRecent((p) => [{ l: m.letter, n: m.number }, ...p].slice(0, 5));
+        } else if (m.type === "bingo") {
+          setWinners(m.winners); setMsg(`BINGO at ball ${m.balls}! Settling on-chain…`);
+        } else if (m.type === "settled") {
+          setPayouts(m.payouts || {}); setStatus("settled"); setMsg("Settled on-chain ✓ (winner paid from escrow)");
+        }
+      };
+      ws.onerror = () => { setStatus("error"); setMsg("WebSocket error — check the backend URL / Cloudflare challenge."); };
+    } catch (e: any) {
+      setStatus("error"); setMsg(`Error: ${e?.message || e}`);
+    }
+  }
+
+  const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
+  const coins = (u: number) => (u / 1_000_000).toLocaleString();
+
+  return (
+    <PhoneScreen bg="linear-gradient(180deg,#1E1B4B 0%,#2D1B69 100%)">
+      <StatusBar />
+      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "4px 16px 10px" }}>
+        <BackBtn onClick={() => go("home")} />
+        <h2 style={{ fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 22, color: "white", flex: 1, margin: 0 }}>Live ⛓️ On-Chain</h2>
+      </div>
+
+      <div style={{ margin: "0 16px 12px", padding: "10px 14px", borderRadius: 16, background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)" }}>
+        <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.72)" }}>{msg}</div>
+        <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 10, color: "rgba(255,255,255,0.4)", marginTop: 4 }}>backend: {apiBase}</div>
+      </div>
+
+      <WalletChip />
+
+      {/* Current ball */}
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "6px 0" }}>
+        <span style={{ fontFamily: "Nunito, sans-serif", fontSize: 10, color: "rgba(255,255,255,0.42)", letterSpacing: 2, textTransform: "uppercase", marginBottom: 6 }}>
+          {count ? `Ball ${count}` : "Ready"}
+        </span>
+        {ball ? <BingoBall letter={ball.l} number={ball.n} size={82} /> : (
+          <div style={{ width: 82, height: 82, borderRadius: "50%", background: "rgba(255,255,255,0.08)", border: "3px solid rgba(255,255,255,0.15)" }} />
+        )}
+      </div>
+
+      {/* Recent balls */}
+      <div style={{ display: "flex", justifyContent: "center", gap: 8, padding: "8px 0 12px", minHeight: 40 }}>
+        {recent.map((b, i) => <BingoBall key={i} letter={b.l} number={b.n} size={33} dim={i > 2} />)}
+      </div>
+
+      {/* Winners / payouts */}
+      {Object.keys(payouts).length > 0 && (
+        <div style={{ margin: "0 16px 14px", padding: "12px 16px", borderRadius: 20, background: "rgba(16,185,129,0.14)", border: "1px solid rgba(16,185,129,0.3)" }}>
+          <div style={{ fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 15, color: "#A7F3D0", marginBottom: 8 }}>🏆 Settlement (on-chain)</div>
+          {Object.entries(payouts).sort((a, b) => b[1] - a[1]).map(([addr, amt]) => (
+            <div key={addr} style={{ display: "flex", justifyContent: "space-between", padding: "3px 0", fontFamily: "Nunito, sans-serif", fontSize: 13, color: "white" }}>
+              <span style={{ opacity: 0.8 }}>{short(addr)}{winners.includes(addr) ? " 👑" : ""}</span>
+              <span style={{ fontWeight: 800, color: amt > 0 ? "#FBBF24" : "rgba(255,255,255,0.4)" }}>🪙 {coins(amt)}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div style={{ padding: "0 16px 24px" }}>
+        <button onClick={start} disabled={status === "running"} style={{
+          width: "100%", padding: "16px 0", borderRadius: 22,
+          background: status === "running" ? "rgba(255,255,255,0.14)" : "linear-gradient(135deg,#8B5CF6,#EC4899)",
+          color: "white", fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 20,
+          border: "none", cursor: status === "running" ? "default" : "pointer", boxShadow: "0 8px 30px #8B5CF640",
+        }}>
+          {status === "running" ? "Playing…" : status === "settled" ? "Play Again ⛓️" : "Start Real Game ⛓️"}
+        </button>
+        {status === "error" && (
+          <div style={{ marginTop: 10, fontFamily: "Nunito, sans-serif", fontSize: 12, color: "#FCA5A5", textAlign: "center" }}>{msg}</div>
+        )}
+      </div>
+    </PhoneScreen>
+  );
+}
+
 // ─── Navigation & App shell ───────────────────────────────────────────────────
 const NAV: { id: Screen; label: string; emoji: string }[] = [
   { id: "splash",  label: "Splash",  emoji: "✨" },
@@ -851,10 +1129,12 @@ const NAV: { id: Screen; label: string; emoji: string }[] = [
   { id: "shop",    label: "Shop",    emoji: "🛒" },
   { id: "profile", label: "Profile", emoji: "👤" },
   { id: "daily",   label: "Daily",   emoji: "🎁" },
+  { id: "live",    label: "Live",    emoji: "⛓️" },
 ];
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>("splash");
+  const [sess, setSess] = useState<Session>(DEFAULT_SESSION);
 
   return (
     <>
@@ -922,14 +1202,15 @@ export default function App() {
 
           {screen === "splash"  && <SplashScreen  go={setScreen} />}
           {screen === "home"    && <HomeScreen    go={setScreen} />}
-          {screen === "lobby"   && <LobbyScreen   go={setScreen} />}
-          {screen === "cards"   && <CardsScreen   go={setScreen} />}
-          {screen === "game"    && <GameScreen    go={setScreen} />}
-          {screen === "win"     && <WinScreen     go={setScreen} />}
+          {screen === "lobby"   && <LobbyScreen   go={setScreen} setSess={setSess} />}
+          {screen === "cards"   && <CardsScreen   go={setScreen} sess={sess} setSess={setSess} />}
+          {screen === "game"    && <GameScreen    go={setScreen} sess={sess} setSess={setSess} />}
+          {screen === "win"     && <WinScreen     go={setScreen} sess={sess} />}
           {screen === "lose"    && <LoseScreen    go={setScreen} />}
           {screen === "shop"    && <ShopScreen    go={setScreen} />}
           {screen === "profile" && <ProfileScreen go={setScreen} />}
           {screen === "daily"   && <DailyScreen   go={setScreen} />}
+          {screen === "live"    && <LiveScreen    go={setScreen} />}
         </div>
 
         <p style={{ fontFamily: "Nunito, sans-serif", fontSize: 11, color: "rgba(255,255,255,0.22)", textAlign: "center", maxWidth: 340 }}>
