@@ -77,6 +77,7 @@ export default function DesktopApp() {
   const [numCards, setNumCards] = useState(1);
   const [game, setGame] = useState<GameState | null>(null);
   const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState("");
   const [err, setErr] = useState("");
   const wsRef = useRef<WebSocket | null>(null);
 
@@ -86,9 +87,13 @@ export default function DesktopApp() {
   async function play(room: Room) {
     try {
       setBusy(true); setErr("");
+      setProgress("Opening round on-chain… (1/3)");
       const r = await createRound({ entry_fee: Math.round(room.entryFee * 1_000_000), rake_bps: room.rakeBps, payout_weights_bps: [10000] });
+      setProgress("Escrowing your entry… (2/3)");
       const me = await joinRound(r.roundId, numCards);
+      setProgress("Adding an opponent… (3/3)");
       await joinRound(r.roundId, 1); // one bot opponent
+      setProgress("");
       const g: GameState = {
         roundId: r.roundId, room, numCards, playerAddr: me.player, card: me.cards[0],
         current: null, recent: [], marked: new Set(), count: 0, status: "Waiting for the draw…", done: false,
@@ -159,6 +164,18 @@ export default function DesktopApp() {
             <span style={{ color: "rgba(255,255,255,0.45)", fontSize: 13 }}>+{numCards * 8}% odds</span>
           </div>
 
+          {busy && progress && (
+            <div style={{ maxWidth: 520, margin: "0 auto 20px", padding: "14px 18px", borderRadius: 14, background: "rgba(139,92,246,0.16)", border: "1px solid rgba(139,92,246,0.35)", textAlign: "center" }}>
+              <div style={{ fontFamily: F, fontWeight: 700, fontSize: 15 }}>⏳ {progress}</div>
+              <div style={{ display: "flex", gap: 6, justifyContent: "center", marginTop: 10 }}>
+                {[1, 2, 3].map(s => {
+                  const cur = Number((progress.match(/\((\d)\/3\)/) || [])[1] || 0);
+                  return <div key={s} style={{ width: 60, height: 6, borderRadius: 3, background: s <= cur ? "#8B5CF6" : "rgba(255,255,255,0.15)" }} />;
+                })}
+              </div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginTop: 8 }}>each step is a real on-chain transaction (~4s/block)</div>
+            </div>
+          )}
           {err && <div style={{ textAlign: "center", color: "#FCA5A5", marginBottom: 16 }}>{err}</div>}
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))", gap: 20 }}>
