@@ -5,6 +5,7 @@ import {
   Volume2, VolumeX, MessageCircle, ChevronRight,
 } from "lucide-react";
 import { apiBase, createRound, joinRound, roundSocket, getRooms, getShop } from "../lib/api";
+import { waitForFleet, connectWallet, walletBalance, disconnectWallet } from "../lib/wallet";
 
 // Shared session for the real on-chain play flow (Lobby → Cards → Game → Win).
 type Session = {
@@ -960,6 +961,57 @@ function DailyScreen({ go }: { go: (s: Screen) => void }) {
   );
 }
 
+// ─── FleetWallet connect chip ───────────────────────────────────────────────────
+function WalletChip() {
+  const [avail, setAvail] = useState(false);
+  const [addr, setAddr] = useState<string | null>(null);
+  const [bal, setBal] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+
+  useEffect(() => { waitForFleet(700).then(setAvail); }, []);
+
+  async function connect() {
+    try {
+      setBusy(true); setErr("");
+      const a = await connectWallet();
+      setAddr(a.address);
+      const b = await walletBalance();
+      if (b) setBal(`${b.whole} ${b.symbol}`);
+    } catch (e: any) {
+      setErr(String(e?.message || e));
+    } finally { setBusy(false); }
+  }
+  async function disconnect() { await disconnectWallet(); setAddr(null); setBal(null); }
+
+  const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
+  const base = { display: "flex", alignItems: "center", gap: 8, margin: "0 16px 12px", padding: "10px 14px", borderRadius: 16, fontFamily: "Nunito, sans-serif", fontSize: 12 } as const;
+
+  if (addr) {
+    return (
+      <div style={{ ...base, background: "rgba(16,185,129,0.16)", border: "1px solid rgba(16,185,129,0.3)", color: "white" }}>
+        <span style={{ fontSize: 14 }}>🦊</span>
+        <span style={{ fontWeight: 800 }}>{short(addr)}</span>
+        <span style={{ opacity: 0.75 }}>· {bal ?? "— CNPY"}</span>
+        <button onClick={disconnect} style={{ marginLeft: "auto", background: "rgba(255,255,255,0.14)", border: "none", color: "white", borderRadius: 10, padding: "4px 10px", cursor: "pointer", fontFamily: "Nunito, sans-serif", fontWeight: 700, fontSize: 11 }}>Disconnect</button>
+      </div>
+    );
+  }
+  return (
+    <div style={{ ...base, flexDirection: "column", alignItems: "stretch", gap: 6, background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)" }}>
+      <button onClick={connect} disabled={!avail || busy} style={{
+        padding: "10px 0", borderRadius: 12, border: "none", cursor: avail && !busy ? "pointer" : "default",
+        background: avail ? "linear-gradient(135deg,#6366F1,#8B5CF6)" : "rgba(255,255,255,0.12)",
+        color: "white", fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 14,
+      }}>
+        {busy ? "Connecting…" : avail ? "🦊 Connect FleetWallet" : "FleetWallet not detected"}
+      </button>
+      {!avail && <span style={{ color: "rgba(255,255,255,0.5)", textAlign: "center" }}>Install the FleetWallet Chrome extension to connect a Canopy wallet.</span>}
+      {err && <span style={{ color: "#FCA5A5", textAlign: "center" }}>{err}</span>}
+    </div>
+  );
+}
+
 // ─── 11. Live (real backend + on-chain) ────────────────────────────────────────
 function LiveScreen({ go }: { go: (s: Screen) => void }) {
   type St = "idle" | "running" | "settled" | "error";
@@ -1017,6 +1069,8 @@ function LiveScreen({ go }: { go: (s: Screen) => void }) {
         <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.72)" }}>{msg}</div>
         <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 10, color: "rgba(255,255,255,0.4)", marginTop: 4 }}>backend: {apiBase}</div>
       </div>
+
+      <WalletChip />
 
       {/* Current ball */}
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "6px 0" }}>
