@@ -108,7 +108,21 @@ token/CNPY pool (see `tokenomics.md`).
 and hosting the chain, plugin, servers and validator set. Natural fit: the
 platform's infra revenue reinforces the core business.
 
-## 11. The ask (fill in)
+## 11. The ask
 
-Raising **$___** to: harden security + audit, build games #2–#3, scale infra,
-legal/licensing, and go-to-market. See `docs/pitch` for the deck.
+Raising a **$750K pre-seed** (on a SAFE, ~$6M pre-money — sized to 2026 market
+medians; adjustable). We already have a working product and our own live chain,
+so the round funds the path to a **real-money soft-launch**, not R&D from zero.
+
+**Use of funds**
+- 25% — Security hardening + independent audit (VRF entropy, key custody, bug bounty)
+- 25% — Legal · licensing · KYC/AML (real-money play is regulated gambling)
+- 20% — Games #2–#3 + product hardening
+- 15% — Infrastructure & scaling (Redis/Postgres, WS fan-out, validators)
+- 15% — Go-to-market & initial token liquidity
+
+**Milestone this funds**: security+legal cleared → soft-launch of game #1 with
+real money in 1–2 jurisdictions → game #2 in progress. Deck: pitch web page.
+
+*Benchmarks (2026): pre-seed median ~$750K, pre-money ~$6M, ~15% dilution; web3
+gaming pre-seeds trend to the low single-digit millions.*
