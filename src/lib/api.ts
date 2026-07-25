@@ -49,6 +49,30 @@ async function jpost<T>(path: string, body?: unknown): Promise<T> {
 export const getRooms = () => jget<Room[]>("/rooms");
 export const getShop = () => jget<Record<string, unknown[]>>("/shop");
 
+export interface RoundInfo {
+  roundId: string;
+  entryFee: number;   // base entry (uCNPY) for 1 card
+  rakeBps: number;
+  chainId: number;    // e.g. 405 (graduated Bingo chain)
+  networkId: number;
+  rpcUrl: string;     // public node RPC the wallet submits the join to
+}
+
+// What a wallet needs to build+sign a MessageJoinRoom for a round.
+export const getRoundInfo = (roundId: string) =>
+  jget<RoundInfo>(`/rounds/${roundId}/info`);
+
+// The player's card grids, after a wallet-signed join (server holds the seed).
+export const getCard = (roundId: string, address: string, numCards: number) =>
+  jget<{ player: string; numCards: number; cards: number[][][] }>(
+    `/rounds/${roundId}/card?address=${address}&num_cards=${numCards}`,
+  );
+
+// Entry cost = base entry × card multiplier (mirrors engine.economy).
+export const CARD_COST_MULTIPLIER_BPS: Record<number, number> = { 1: 10000, 2: 18000, 3: 25000, 4: 32000 };
+export const entryCost = (baseEntryUcnpy: number, numCards: number) =>
+  Math.round((baseEntryUcnpy * (CARD_COST_MULTIPLIER_BPS[numCards] ?? 10000)) / 10000);
+
 export const createRound = (opts?: {
   entry_fee?: number;
   rake_bps?: number;
