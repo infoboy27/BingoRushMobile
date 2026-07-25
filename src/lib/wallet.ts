@@ -74,25 +74,33 @@ export async function disconnectWallet(): Promise<void> {
 
 export const WALLET_METHOD_MISSING = "WALLET_METHOD_MISSING";
 
-/**
- * Ask FleetWallet to sign + submit a room-join for the connected account.
- * Requires the wallet to implement the `bingo_join` request method.
- * @returns the submitted tx hash
- */
-export async function bingoJoin(p: {
-  roundId: string;
-  numCards: number;
-  amount: number;      // uCNPY
+// Generic Canopy tx signer (see docs/fleetwallet-canopy-generic-tx-spec.md).
+// The dApp describes the plugin message by typed fields; the wallet encodes it,
+// shows the fields for approval, signs (BLS) and submits to rpcUrl. Reusable for
+// every game on the platform.
+export interface CanopyTxField {
+  number: number;
+  type: "bytes" | "uint64" | "string" | "bool" | "repeated_uint64";
+  value?: unknown;
+  fromSigner?: boolean; // bytes only: wallet fills with the connected 20-byte address
+}
+export interface CanopySignParams {
+  messageName: string;
+  typeUrl: string;
+  fields: CanopyTxField[];
   rpcUrl: string;
   chainId: number;
   networkId: number;
-}): Promise<{ txHash: string }> {
+  fee?: number;
+  display?: { title: string; lines: { label: string; value: string }[] };
+}
+
+export async function canopySignAndSubmit(params: CanopySignParams): Promise<{ txHash: string }> {
   if (!hasFleet()) throw new Error("FleetWallet not detected");
   try {
-    const res = await window.fleet!.request({ method: "bingo_join", params: [p] });
+    const res = await window.fleet!.request({ method: "canopy_signAndSubmit", params: [params] });
     return typeof res === "string" ? { txHash: res } : res;
   } catch (e: any) {
-    // method not implemented by the wallet yet
     if (e?.code === 4200 || /unsupported|unknown method|not.*support/i.test(String(e?.message))) {
       const err = new Error(WALLET_METHOD_MISSING);
       (err as any).code = WALLET_METHOD_MISSING;
@@ -100,4 +108,36 @@ export async function bingoJoin(p: {
     }
     throw e;
   }
+}
+
+/**
+ * Ask FleetWallet to sign + submit a room-join (MessageJoinRoom) for the
+ * connected account, via the generic `canopy_signAndSubmit` method.
+ */
+export async function bingoJoin(p: {
+  roundId: string;    // hex
+  numCards: number;
+  amount: number;     // uCNPY
+  rpcUrl: string;
+  chainId: number;
+  networkId: number;
+}): Promise<{ txHash: string }> {
+  return canopySignAndSubmit({
+    messageName: "join_room",
+    typeUrl: "type.googleapis.com/types.MessageJoinRoom",
+    fields: [
+      { number: 1, type: "bytes", fromSigner: true },   // player_address
+      { number: 2, type: "bytes", value: p.roundId },   // round_id
+      { number: 3, type: "uint64", value: p.numCards }, // num_cards
+      { number: 4, type: "uint64", value: p.amount },   // amount
+    ],
+    rpcUrl: p.rpcUrl, chainId: p.chainId, networkId: p.networkId, fee: 10000,
+    display: {
+      title: "Join Bingo room",
+      lines: [
+        { label: "Room", value: `${p.roundId.slice(0, 8)}…` },
+        { label: "Stake", value: `${(p.amount / 1_000_000).toLocaleString()} CNPY` },
+      ],
+    },
+  });
 }
