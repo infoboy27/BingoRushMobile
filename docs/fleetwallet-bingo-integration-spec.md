@@ -1,124 +1,136 @@
-# Bingo Rush ⇄ FleetWallet integration spec
+# Bingo Rush ⇄ FleetWallet — `bingo_join` implementation guide
 
-FleetWallet (https://github.com/nodefleet/FleetWallet) is a Manifest-V3 Chrome
-extension that injects `window.fleet` and signs Canopy **BLS12-381** transactions
-internally. This spec defines what Bingo Rush uses today and the one method
-FleetWallet needs to add for self-custody play.
+FleetWallet already ships everything Bingo Rush needs to **connect + read balance**
+(used by the wallet chip). To enable **self-custody play**, add one request method:
+`bingo_join`, which builds a `MessageJoinRoom`, signs it with the connected
+account, and submits it to the round's Canopy RPC.
 
-Mirrors the shape of the existing canoLiq integration spec (`canopy` network,
-uCNPY amounts, 20-byte lowercase hex addresses, no `0x`).
+This is grounded in FleetWallet's existing `canoliq_deposit` implementation —
+`bingo_join` mirrors it exactly, with two differences: (1) a different plugin
+message, and (2) it submits to a **per-round `rpcUrl`** (Bingo is chainId **405**,
+which may differ from the wallet's active env).
 
----
+## Network (graduated Bingo chain)
 
-## 1. What Bingo uses today (already shipping in FleetWallet)
+| | |
+|---|---|
+| RPC | `https://bingo.val-a.grad.dev.app.canopynetwork.org/rpc` |
+| chainId | **405** · networkId **1** · CNPY / 6 decimals · fee 10000 uCNPY |
 
-The dApp side lives in `src/lib/wallet.ts`. On the **Live** screen the wallet chip:
+The dApp passes `rpcUrl`, `chainId`, `networkId` per round (from the game
+server's `GET /rounds/{id}/info`), so the wallet doesn't need to be pinned to
+Bingo's env.
 
-```js
-await window.fleet.connect({ permissions: ["account", "balance"], label: "Bingo Rush", network: "canopy" })
-// → { address: "851e90ea…", chain: "canopy", permissions: [...] }
-await window.fleet.getBalance()
-// → { address, chain, raw /* uCNPY */, whole /* "5.123456" */, symbol: "CNPY" }
-```
-
-Address is normalized `address.replace(/^0x/, "").toLowerCase()`. The chip listens
-for `fleet#initialized` (with a 700 ms fallback).
-
----
-
-## 2. What FleetWallet needs to add: `bingo_join`
-
-To let a player stake their own entry from self-custody, add one request method.
-The wallet already has the generic signer `signCanopyMessage()` in
-`lib/chains/canopy-tx.js`; `bingo_join` builds a `MessageJoinRoom`, signs it with
-the connected account, and submits it.
+## dApp call (already implemented in `src/lib/wallet.ts`)
 
 ```js
-const res = await window.fleet.request({
+await window.fleet.request({
   method: "bingo_join",
-  params: [{
-    roundId:   "0f4ebadafcc866c8",   // hex, from the game server
-    numCards:  2,                     // 1..4
-    amount:    180000000,             // uCNPY the player escrows
-    rpcUrl:    "https://<canopy-node-rpc>",
-    chainId:   1,
-    networkId: 1
-  }]
+  params: [{ roundId, numCards, amount, rpcUrl, chainId, networkId }]
 })
-// → "048a2ab0…"  OR  { txHash: "048a2ab0…" }   (either accepted)
+// → { txHash } or "0x…"
 ```
+`roundId` is hex; `amount` is uCNPY the player escrows.
 
-**What the wallet does internally** (same pattern as `canoliq_deposit`):
+## FleetWallet changes
 
-1. Build `MessageJoinRoom` protobuf (see §3) with `player_address` = connected account.
-2. `signCanopyMessage({ messageName: "join_room", messageTypeUrl: "type.googleapis.com/types.MessageJoinRoom", messageBytes, jsonMsg, fee: 10000n, networkId, chainId, privateKey })`.
-3. `POST {rpcUrl}/v1/tx` with the returned JSON payload.
-4. Show a human-readable confirm: **"Join Bingo round … · stake {amount} CNPY"**.
+### 1. `lib/chains/canopy-tx.js` — encoder
 
-Return the tx hash (string or `{ txHash }`).
+`MessageJoinRoom` is a proto3 message; the encoder is the same style as
+`encodeMessageSend`:
 
-> Settle is signed by the game-server **operator**, not the player — the player
-> only ever signs `bingo_join`. This keeps the wallet's approval surface to a
-> single, meaningful action.
+```js
+// types.MessageJoinRoom { bytes player_address=1; bytes round_id=2; uint64 num_cards=3; uint64 amount=4; }
+export function encodeMessageJoinRoom({ playerAddress, roundId, numCards, amount }) {
+  return concat(
+    fieldBytes(1, playerAddress),
+    fieldBytes(2, roundId),
+    fieldVarint(3, numCards),
+    fieldVarint(4, amount),
+  );
+}
+```
+Type URL `type.googleapis.com/types.MessageJoinRoom`, message name `join_room`.
 
----
+### 2. Submit with `msgTypeUrl` + `msgBytes` — NOT `msg` json ⚠️
 
-## 3. Bingo transaction protobuf
+`signCanopyMessage()` emits `{ type, msg: jsonMsg, signature, … }`. That works
+for **registered** messages (send/stake) because the node re-encodes the json
+canonically. **`join_room` is a plugin message** — the node cannot re-derive the
+exact signed bytes from json, so the signature won't verify. Submit the **exact
+signed bytes** instead (this is the proven path — the Bingo game server's Python
+bridge uses it against chainId 405):
 
-Package `types` (same as core Canopy messages).
+```jsonc
+POST {rpcUrl}/v1/tx
+{
+  "type": "join_room",
+  "msgTypeUrl": "type.googleapis.com/types.MessageJoinRoom",
+  "msgBytes":   "<hex of encodeMessageJoinRoom(...)>",
+  "signature": { "publicKey": "<48b hex>", "signature": "<96b hex>" },
+  "time": <micros>, "createdHeight": <height>, "fee": 10000,
+  "memo": "", "networkID": 1, "chainID": 405
+}
+```
+The signature is over `signBytes = encodeTransaction(baseTx with signature=nil)`
+where `baseTx.msgAny = encodeAny(typeUrl, msgBytes)` — identical to
+`signCanopyMessage`; only the wire json's `msg` is replaced by
+`msgTypeUrl`+`msgBytes`. BLS12-381 (noble) as already used.
 
-```proto
-message MessageJoinRoom {
-  bytes  player_address = 1;   // 20-byte connected account
-  bytes  round_id       = 2;   // from roundId hex
-  uint64 num_cards      = 3;
-  uint64 amount         = 4;   // uCNPY
+### 3. `lib/chains/canopy.js` — method
+
+```js
+export async function bingoJoin({ from, roundId, numCards, amount, rpcUrl, chainId, networkId, privateKey, fee }) {
+  const playerAddress = hexToBytes(stripHex(from).toLowerCase());
+  const rid = hexToBytes(stripHex(roundId));
+  const height = BigInt((await (await fetch(`${rpcUrl}/v1/query/height`,{method:"POST",headers:{'content-type':'application/json'},body:"{}"})).json()).height || 0);
+  const time = BigInt(Date.now()) * 1000n;
+  const messageBytes = encodeMessageJoinRoom({ playerAddress, roundId: rid, numCards: BigInt(numCards), amount: BigInt(amount) });
+  // sign the Transaction envelope exactly like signCanopyMessage, then submit
+  // with msgTypeUrl/msgBytes (see §2). Reuse the envelope encoder + blsSign.
+  const json = signJoinToWireJson({ messageBytes, playerPub, sig, height, time,
+    fee: fee || 10000n, networkId: BigInt(networkId), chainId: BigInt(chainId) });
+  const res = await fetch(`${rpcUrl}/v1/tx`, { method:"POST", headers:{'content-type':'application/json'}, body: JSON.stringify(json) });
+  return res.json(); // txHash string or { txHash }
 }
 ```
 
-- Type URL: `type.googleapis.com/types.MessageJoinRoom`
-- Outer `Transaction.message_type` / JSON `type`: `"join_room"`
-- Signing: BLS12-381, `signBytes = proto.Marshal(Transaction with Signature=nil)`,
-  DST `BLS_SIG_BLS12381G2_XMD:SHA-256_SSWU_RO_NUL_` — identical to `MessageSend`.
+### 4. `background/service-worker.js` — route
 
----
+Mirror `rpcCanoliqDeposit`/`rpcCanoliqTx` (but no canoLiq env gate; use per-round
+params). Add to the `handleRpc` switch:
 
-## 4. Flow with the game server
+```js
+case "bingo_join": return await rpcBingoJoin(origin, params[0] || {});
+```
+`rpcBingoJoin(origin, p)`: require a write permission, validate
+`roundId`(hex)/`numCards`(1–4)/`amount`(positive int)/`rpcUrl`(https), then open
+an approval intent `{ kind:"bingo-join", address:grant.address, request:{ roundId, numCards, amount, rpcUrl, chainId, networkId } }` via `openApprovalWindow`.
 
-1. `POST {gameServer}/rounds` — operator opens the round on-chain (commit seed). → `{ roundId }`
-2. `window.fleet.request({ method: "bingo_join", … })` — **player** signs + submits the entry.
-3. `GET {gameServer}/rounds/{roundId}/card?address={player}&num_cards={n}` — the server (which holds the seed) returns the player's card grids.
-4. `WS {gameServer}/ws/rounds/{roundId}` — live ball draw; server settles on-chain and pays winners.
+### 5. `popup/popup.js` — approval screen
 
-Game server base URL: `VITE_API_URL` (default `https://bingo.jfmcss.com`).
+Add a `"bingo-join"` case in the three intent switches (routing ~L2037, render
+~L2103, approve-action ~L2284), mirroring `canoliq-deposit`:
+- **Render**: “Join Bingo round `{roundId.slice(0,8)}…` · stake `{amount/1e6}` CNPY”.
+- **On approve**: call `canopy.bingoJoin({ from: grant.address, …intent.request, privateKey })` and resolve with the returned tx hash.
 
----
+## After the wallet returns
 
-## 5. Network parameters
+The game server (`src/lib/api.ts`) already exposes what the dApp needs post-join:
+- `GET /rounds/{id}/info` → `{ entryFee, rakeBps, chainId, networkId, rpcUrl }`
+- `GET /rounds/{id}/card?address=&num_cards=` → the player's card grids
 
-| | Dev (today) | Notes |
-|---|---|---|
-| chainId | 1 | Bingo nested chain (dev, solo-validator) |
-| networkId | 1 | |
-| symbol / decimals | CNPY / 6 | 1 CNPY = 1_000_000 uCNPY |
-| fee | 10000 uCNPY | matches `sendFee` |
+Flow: server opens the round → `bingo_join` (player signs) → `GET …/card` →
+`WS /ws/rounds/{id}` (live draw) → server settles on-chain.
 
-**Open infra item:** for `bingo_join` the Canopy **node RPC must be reachable by
-the browser** (`rpcUrl`). Today only the game server (`:8090`) is public via
-Traefik; the node RPC (`:50102`) is private. Before enabling wallet-signed play,
-expose it (e.g. a `rpc.bingo.jfmcss.com` Traefik route → node `:50102`) or add a
-signed-tx proxy on the game server. Reference public Canopy devnet (canoLiq's, for
-format only): `https://cplq.val-a.grad.dev.app.canopynetwork.org/rpc`, chainId 404.
+## Checklist
 
----
+| # | File | What | Testable by |
+|---|---|---|---|
+| 1 | canopy-tx.js | `encodeMessageJoinRoom` | Node (bytes == Python proto) |
+| 2 | canopy.js | `bingoJoin` (submit via msgTypeUrl/msgBytes) | Node (submit to chainId 405) |
+| 3 | service-worker.js | `bingo_join` route + `rpcBingoJoin` | extension load |
+| 4 | popup.js | `bingo-join` approval screen | **browser QA** |
 
-## 6. Implementation checklist (FleetWallet side)
-
-| # | What | Priority |
-|---|---|---|
-| 1 | `bingo_join` request method (build `MessageJoinRoom`, sign, submit, confirm UI) | required |
-| 2 | Human-readable approval ("Join Bingo round X · stake Y CNPY") | required |
-| 3 | Accept `rpcUrl`/`chainId`/`networkId` from params (per-round) | required |
-
-Items already covered by the shipping extension: `connect`, `getAccount`,
-`getBalance`, `fleet#initialized`, BLS signing (`signCanopyMessage`).
+Items 1–2 can be proven in Node against the live graduated chain (405) before
+shipping; item 4 needs the extension's normal browser QA.
