@@ -56,7 +56,7 @@ export function waitForFleet(timeoutMs = 500): Promise<boolean> {
 export async function connectWallet(): Promise<FleetAccount> {
   if (!hasFleet()) throw new Error("FleetWallet not detected");
   const acc = await window.fleet!.connect({
-    permissions: ["account", "balance"],
+    permissions: ["account", "balance", "tx.write"],
     label: "Bingo Rush",
     network: "canopy",
   });
@@ -137,6 +137,45 @@ export async function bingoJoin(p: {
       lines: [
         { label: "Room", value: `${p.roundId.slice(0, 8)}…` },
         { label: "Stake", value: `${(p.amount / 1_000_000).toLocaleString()} CNPY` },
+      ],
+    },
+  });
+}
+
+function randomTokenId(): string {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+/**
+ * Mint a card-skin cosmetic NFT for the connected account (MessageBuyCosmetic,
+ * gem-priced). `kind` must match a gem-priced id in the shop catalog
+ * (GET /shop/cosmetics) — the plugin re-validates the price against that same
+ * catalog server-side, so a tampered client can't under-pay.
+ */
+export async function buyCosmetic(p: {
+  kind: string;       // shop item id, e.g. "galaxy"
+  name: string;       // display only
+  priceGems: number;  // display only
+  rpcUrl: string;
+  chainId: number;
+  networkId: number;
+}): Promise<{ txHash: string }> {
+  return canopySignAndSubmit({
+    messageName: "buy_cosmetic",
+    typeUrl: "type.googleapis.com/types.MessageBuyCosmetic",
+    fields: [
+      { number: 1, type: "bytes", fromSigner: true },     // player_address
+      { number: 2, type: "bytes", value: randomTokenId() }, // token_id
+      { number: 3, type: "string", value: p.kind },        // kind
+    ],
+    rpcUrl: p.rpcUrl, chainId: p.chainId, networkId: p.networkId, fee: 10000,
+    display: {
+      title: "Buy card skin",
+      lines: [
+        { label: "Skin", value: p.name },
+        { label: "Price", value: `${p.priceGems} gems` },
       ],
     },
   });
