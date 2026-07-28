@@ -4,8 +4,8 @@
 // draw, on-chain settle) and FleetWallet, reusing src/lib/api.ts + wallet.ts.
 
 import { useEffect, useRef, useState } from "react";
-import { apiBase, createRound, joinRound, roundSocket, getRooms, type Room } from "../lib/api";
-import { waitForFleet, connectWallet, walletBalance, disconnectWallet } from "../lib/wallet";
+import { apiBase, createRound, joinRound, roundSocket, getRooms, getRoundInfo, getCard, registerRound, entryCost, type Room } from "../lib/api";
+import { waitForFleet, connectWallet, walletBalance, disconnectWallet, hasFleet, bingoJoin, WALLET_METHOD_MISSING } from "../lib/wallet";
 
 const COLS = ["B", "I", "N", "G", "O"];
 const COL_COLORS = ["#3B82F6", "#EC4899", "#10B981", "#F59E0B", "#8B5CF6"];
@@ -36,17 +36,17 @@ function Ball({ letter, number, size = 84, dim = false }: { letter: string; numb
   );
 }
 
-function WalletButton() {
+function WalletButton({ onAccount }: { onAccount?: (a: string | null) => void }) {
   const [avail, setAvail] = useState(false);
   const [addr, setAddr] = useState<string | null>(null);
   const [bal, setBal] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   useEffect(() => { waitForFleet(700).then(setAvail); }, []);
   async function connect() {
-    try { setBusy(true); const a = await connectWallet(); setAddr(a.address); const b = await walletBalance(); if (b) setBal(`${b.whole} ${b.symbol}`); }
+    try { setBusy(true); const a = await connectWallet(); setAddr(a.address); onAccount?.(a.address); const b = await walletBalance(); if (b) setBal(`${b.whole} ${b.symbol}`); }
     catch { /* ignore */ } finally { setBusy(false); }
   }
-  async function disconnect() { await disconnectWallet(); setAddr(null); setBal(null); }
+  async function disconnect() { await disconnectWallet(); setAddr(null); setBal(null); onAccount?.(null); }
   const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
   if (addr) {
     return (
@@ -79,6 +79,7 @@ export default function DesktopApp() {
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState("");
   const [err, setErr] = useState("");
+  const [walletAddr, setWalletAddr] = useState<string | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => { getRooms().then(r => { if (r?.length) { setRooms(r); setLive(true); } }).catch(() => {}); }, []);
@@ -89,13 +90,35 @@ export default function DesktopApp() {
       setBusy(true); setErr("");
       setProgress("Opening round on-chain… (1/3)");
       const r = await createRound({ entry_fee: Math.round(room.entryFee * 1_000_000), rake_bps: room.rakeBps, payout_weights_bps: [10000] });
-      setProgress("Escrowing your entry… (2/3)");
-      const me = await joinRound(r.roundId, numCards);
+
+      // If a FleetWallet is connected, the PLAYER signs their own entry
+      // (bingo_join). Otherwise the server provisions a demo player.
+      let myAddr = "";
+      let myCards: number[][][] = [];
+      if (walletAddr && hasFleet()) {
+        try {
+          const info = await getRoundInfo(r.roundId);
+          const amount = entryCost(info.entryFee, numCards);
+          setProgress("Approve the join in your wallet… (2/3)");
+          await bingoJoin({ roundId: r.roundId, numCards, amount, rpcUrl: info.rpcUrl, chainId: info.chainId, networkId: info.networkId });
+          await registerRound(r.roundId, walletAddr, numCards);
+          const c = await getCard(r.roundId, walletAddr, numCards);
+          myAddr = walletAddr; myCards = c.cards;
+        } catch (e: any) {
+          if (e?.code !== WALLET_METHOD_MISSING) throw e;
+          // wallet can't sign this yet → fall back to a server-provisioned player
+          const me = await joinRound(r.roundId, numCards); myAddr = me.player; myCards = me.cards;
+        }
+      } else {
+        setProgress("Escrowing your entry… (2/3)");
+        const me = await joinRound(r.roundId, numCards); myAddr = me.player; myCards = me.cards;
+      }
+
       setProgress("Adding an opponent… (3/3)");
       await joinRound(r.roundId, 1); // one bot opponent
       setProgress("");
       const g: GameState = {
-        roundId: r.roundId, room, numCards, playerAddr: me.player, card: me.cards[0],
+        roundId: r.roundId, room, numCards, playerAddr: myAddr, card: myCards[0],
         current: null, recent: [], marked: new Set(), count: 0, status: "Waiting for the draw…", done: false,
       };
       setGame(g);
@@ -135,7 +158,7 @@ export default function DesktopApp() {
           </div>
         </div>
         <div style={{ flex: 1 }} />
-        <WalletButton />
+        <WalletButton onAccount={setWalletAddr} />
       </header>
 
       {!game ? (

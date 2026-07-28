@@ -62,6 +62,13 @@ export interface RoundInfo {
 export const getRoundInfo = (roundId: string) =>
   jget<RoundInfo>(`/rounds/${roundId}/info`);
 
+// Register a wallet-signed player after their on-chain bingo_join, so the live
+// draw + result reporting include them (on-chain settle already does).
+export const registerRound = (roundId: string, address: string, numCards: number) =>
+  jpost<{ player: string; numCards: number }>(`/rounds/${roundId}/register`, {
+    address, num_cards: numCards,
+  });
+
 // The player's card grids, after a wallet-signed join (server holds the seed).
 export const getCard = (roundId: string, address: string, numCards: number) =>
   jget<{ player: string; numCards: number; cards: number[][][] }>(
