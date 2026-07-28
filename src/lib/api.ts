@@ -115,6 +115,7 @@ export const createRound = (opts?: {
   entry_fee?: number;
   rake_bps?: number;
   payout_weights_bps?: number[];
+  room?: string;
 }) => jpost<CreatedRound>("/rounds", opts);
 
 export const joinRound = (roundId: string, numCards: number) =>
