@@ -205,6 +205,21 @@ function WalletModal({ walletAddr, onClose }: { walletAddr: string | null; onClo
   );
 }
 
+type EscrowStage = "idle" | "opening" | "awaiting-signature" | "pending" | "confirmed" | "insufficient" | "failed";
+
+const STAGE_STEP: Record<EscrowStage, number> = {
+  idle: 0, opening: 1, "awaiting-signature": 2, pending: 2, confirmed: 3, insufficient: 2, failed: 0,
+};
+const STAGE_META: Record<EscrowStage, { icon: string; color: string; label: string }> = {
+  idle: { icon: "", color: "#8B5CF6", label: "" },
+  opening: { icon: "⏳", color: "#8B5CF6", label: "Opening round on-chain" },
+  "awaiting-signature": { icon: "🦊", color: "#F59E0B", label: "Approve the join in your wallet" },
+  pending: { icon: "⏳", color: "#8B5CF6", label: "Escrowing your entry on-chain" },
+  confirmed: { icon: "✅", color: "#34D399", label: "Confirmed" },
+  insufficient: { icon: "⚠️", color: "#F87171", label: "Insufficient balance to join this room" },
+  failed: { icon: "✕", color: "#F87171", label: "Join failed" },
+};
+
 type GameState = {
   roundId: string; room: Room; numCards: number; playerAddr: string; card: number[][];
   current: { l: string; n: number } | null; recent: { l: string; n: number }[]; marked: Set<number>; count: number;
@@ -217,7 +232,7 @@ export default function DesktopApp() {
   const [numCards, setNumCards] = useState(1);
   const [game, setGame] = useState<GameState | null>(null);
   const [busy, setBusy] = useState(false);
-  const [progress, setProgress] = useState("");
+  const [stage, setStage] = useState<EscrowStage>("idle");
   const [err, setErr] = useState("");
   const [walletAddr, setWalletAddr] = useState<string | null>(null);
   const [skinsOpen, setSkinsOpen] = useState(false);
@@ -227,10 +242,15 @@ export default function DesktopApp() {
   useEffect(() => { getRooms().then(r => { if (r?.length) { setRooms(r); setLive(true); } }).catch(() => {}); }, []);
   useEffect(() => () => wsRef.current?.close(), []);
 
+  function failStage(e: any) {
+    setStage(/insufficient/i.test(String(e?.message)) ? "insufficient" : "failed");
+    setErr(String(e?.message || e));
+    setBusy(false);
+  }
+
   async function play(room: Room) {
     try {
-      setBusy(true); setErr("");
-      setProgress("Opening round on-chain… (1/3)");
+      setBusy(true); setErr(""); setStage("opening");
       const r = await createRound({ entry_fee: Math.round(room.entryFee * 1_000_000), rake_bps: room.rakeBps, payout_weights_bps: [10000] });
 
       // If a FleetWallet is connected, the PLAYER signs their own entry
@@ -241,24 +261,25 @@ export default function DesktopApp() {
         try {
           const info = await getRoundInfo(r.roundId);
           const amount = entryCost(info.entryFee, numCards);
-          setProgress("Approve the join in your wallet… (2/3)");
+          setStage("awaiting-signature");
           await bingoJoin({ roundId: r.roundId, numCards, amount, rpcUrl: info.rpcUrl, chainId: info.chainId, networkId: info.networkId });
+          setStage("pending");
           await registerRound(r.roundId, walletAddr, numCards);
           const c = await getCard(r.roundId, walletAddr, numCards);
           myAddr = walletAddr; myCards = c.cards;
         } catch (e: any) {
-          if (e?.code !== WALLET_METHOD_MISSING) throw e;
+          if (e?.code !== WALLET_METHOD_MISSING) { failStage(e); return; }
           // wallet can't sign this yet → fall back to a server-provisioned player
+          setStage("pending");
           const me = await joinRound(r.roundId, numCards); myAddr = me.player; myCards = me.cards;
         }
       } else {
-        setProgress("Escrowing your entry… (2/3)");
+        setStage("pending");
         const me = await joinRound(r.roundId, numCards); myAddr = me.player; myCards = me.cards;
       }
 
-      setProgress("Adding an opponent… (3/3)");
       await joinRound(r.roundId, 1); // one bot opponent
-      setProgress("");
+      setStage("confirmed");
       const g: GameState = {
         roundId: r.roundId, room, numCards, playerAddr: myAddr, card: myCards[0],
         current: null, recent: [], marked: new Set(), count: 0, status: "Waiting for the draw…", done: false,
@@ -283,10 +304,10 @@ export default function DesktopApp() {
         });
       };
       ws.onerror = () => setGame(prev => prev ? { ...prev, status: "connection error", done: true } : prev);
-    } catch (e: any) { setErr(String(e?.message || e)); setBusy(false); }
+    } catch (e: any) { failStage(e); }
   }
 
-  function exit() { wsRef.current?.close(); setGame(null); }
+  function exit() { wsRef.current?.close(); setGame(null); setStage("idle"); }
 
   return (
     <div style={{ minHeight: "100vh", background: "linear-gradient(160deg,#2E1065 0%,#1E1B4B 45%,#0F172A 100%)", color: "white", fontFamily: N }}>
@@ -337,19 +358,25 @@ export default function DesktopApp() {
             <span style={{ color: "rgba(255,255,255,0.45)", fontSize: 13 }}>+{numCards * 8}% odds</span>
           </div>
 
-          {busy && progress && (
-            <div style={{ maxWidth: 520, margin: "0 auto 20px", padding: "14px 18px", borderRadius: 14, background: "rgba(139,92,246,0.16)", border: "1px solid rgba(139,92,246,0.35)", textAlign: "center" }}>
-              <div style={{ fontFamily: F, fontWeight: 700, fontSize: 15 }}>⏳ {progress}</div>
+          {busy && (stage === "opening" || stage === "awaiting-signature" || stage === "pending") && (
+            <div style={{ maxWidth: 520, margin: "0 auto 20px", padding: "14px 18px", borderRadius: 14, background: `${STAGE_META[stage].color}22`, border: `1px solid ${STAGE_META[stage].color}55`, textAlign: "center" }}>
+              <div style={{ fontFamily: F, fontWeight: 700, fontSize: 15 }}>{STAGE_META[stage].icon} {STAGE_META[stage].label}…</div>
               <div style={{ display: "flex", gap: 6, justifyContent: "center", marginTop: 10 }}>
-                {[1, 2, 3].map(s => {
-                  const cur = Number((progress.match(/\((\d)\/3\)/) || [])[1] || 0);
-                  return <div key={s} style={{ width: 60, height: 6, borderRadius: 3, background: s <= cur ? "#8B5CF6" : "rgba(255,255,255,0.15)" }} />;
-                })}
+                {[1, 2, 3].map(s => (
+                  <div key={s} style={{ width: 60, height: 6, borderRadius: 3, background: s <= STAGE_STEP[stage] ? "#8B5CF6" : "rgba(255,255,255,0.15)" }} />
+                ))}
               </div>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginTop: 8 }}>each step is a real on-chain transaction (~4s/block)</div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginTop: 8 }}>
+                {stage === "awaiting-signature" ? "check the FleetWallet popup" : "each step is a real on-chain transaction (~4s/block)"}
+              </div>
             </div>
           )}
-          {err && <div style={{ textAlign: "center", color: "#FCA5A5", marginBottom: 16 }}>{err}</div>}
+          {(stage === "insufficient" || stage === "failed") && err && (
+            <div style={{ maxWidth: 520, margin: "0 auto 16px", padding: "12px 18px", borderRadius: 14, background: `${STAGE_META[stage].color}1a`, border: `1px solid ${STAGE_META[stage].color}55`, textAlign: "center" }}>
+              <div style={{ fontFamily: F, fontWeight: 700, fontSize: 14, color: STAGE_META[stage].color }}>{STAGE_META[stage].icon} {STAGE_META[stage].label}</div>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", marginTop: 4 }}>{err}</div>
+            </div>
+          )}
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))", gap: 20 }}>
             {rooms.map((room, i) => {
