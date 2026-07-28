@@ -4,7 +4,7 @@
 // draw, on-chain settle) and FleetWallet, reusing src/lib/api.ts + wallet.ts.
 
 import { useEffect, useRef, useState } from "react";
-import { apiBase, createRound, joinRound, roundSocket, chatSocket, getRooms, getRoundInfo, getCard, registerRound, entryCost, getNetwork, getCosmeticsShop, getGems, topupGems, getWallet, type Room, type CosmeticItem, type WalletInfo } from "../lib/api";
+import { apiBase, createRound, joinRound, roundSocket, chatSocket, getRooms, getRoundInfo, getCard, registerRound, entryCost, getNetwork, getCosmeticsShop, getGems, topupGems, getWallet, getPlayerStats, getPlayerHistory, type Room, type CosmeticItem, type WalletInfo, type PlayerStats, type RoundHistoryEntry } from "../lib/api";
 import { waitForFleet, connectWallet, walletBalance, disconnectWallet, hasFleet, bingoJoin, buyCosmetic, WALLET_METHOD_MISSING } from "../lib/wallet";
 
 const COLS = ["B", "I", "N", "G", "O"];
@@ -205,6 +205,93 @@ function WalletModal({ walletAddr, onClose }: { walletAddr: string | null; onClo
   );
 }
 
+function levelFor(gamesPlayed: number): number {
+  // Simple, deterministic level curve — no XP system yet, just a fun readout
+  // derived from the same games_played count that already powers stats.
+  return 1 + Math.floor(Math.sqrt(gamesPlayed));
+}
+
+function ProfileModal({ walletAddr, onClose }: { walletAddr: string | null; onClose: () => void }) {
+  const [stats, setStats] = useState<PlayerStats | null>(null);
+  const [recent, setRecent] = useState<RoundHistoryEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!walletAddr) { setLoading(false); return; }
+    Promise.all([getPlayerStats(walletAddr), getPlayerHistory(walletAddr)])
+      .then(([s, h]) => { setStats(s); setRecent(h.slice(0, 5)); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [walletAddr]);
+
+  const coins = (u: number) => (u / 1_000_000).toLocaleString(undefined, { maximumFractionDigits: 2 });
+  const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
+  const winRate = stats && stats.gamesPlayed > 0 ? Math.round((stats.wins / stats.gamesPlayed) * 100) : 0;
+
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50 }} onClick={onClose}>
+      <div onClick={e => e.stopPropagation()} style={{ background: "#1E1B4B", borderRadius: 24, padding: 26, width: 460, maxWidth: "92vw", border: "1px solid rgba(255,255,255,0.1)", color: "white", fontFamily: N }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+          <h2 style={{ fontFamily: F, margin: 0, fontSize: 22 }}>👤 Profile</h2>
+          <button onClick={onClose} style={{ background: "none", border: "none", color: "white", fontSize: 20, cursor: "pointer" }}>✕</button>
+        </div>
+
+        {!walletAddr && (
+          <div style={{ padding: 12, borderRadius: 12, background: "rgba(239,68,68,0.14)", fontSize: 13, marginTop: 12 }}>
+            Connect FleetWallet to see your profile.
+          </div>
+        )}
+
+        {walletAddr && loading && <div style={{ opacity: 0.6, fontSize: 13, marginTop: 12 }}>Loading…</div>}
+
+        {walletAddr && stats && (
+          <>
+            <div style={{ display: "flex", alignItems: "center", gap: 14, margin: "18px 0" }}>
+              <div style={{ width: 56, height: 56, borderRadius: 16, background: "linear-gradient(135deg,#FBBF24,#8B5CF6)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: F, fontWeight: 700, fontSize: 20 }}>
+                {levelFor(stats.gamesPlayed)}
+              </div>
+              <div>
+                <div style={{ fontFamily: F, fontWeight: 700, fontSize: 16 }}>{short(stats.address)}</div>
+                <div style={{ fontSize: 12, opacity: 0.55 }}>Level {levelFor(stats.gamesPlayed)}</div>
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div style={{ padding: 14, borderRadius: 14, background: "rgba(255,255,255,0.06)" }}>
+                <div style={{ fontSize: 11, opacity: 0.55 }}>Games played</div>
+                <div style={{ fontFamily: F, fontWeight: 700, fontSize: 20 }}>{stats.gamesPlayed}</div>
+              </div>
+              <div style={{ padding: 14, borderRadius: 14, background: "rgba(255,255,255,0.06)" }}>
+                <div style={{ fontSize: 11, opacity: 0.55 }}>Win rate</div>
+                <div style={{ fontFamily: F, fontWeight: 700, fontSize: 20 }}>{winRate}%</div>
+              </div>
+              <div style={{ padding: 14, borderRadius: 14, background: "rgba(52,211,153,0.12)", border: "1px solid rgba(52,211,153,0.3)" }}>
+                <div style={{ fontSize: 11, opacity: 0.55 }}>Rounds won</div>
+                <div style={{ fontFamily: F, fontWeight: 700, fontSize: 20 }}>{stats.wins}</div>
+              </div>
+              <div style={{ padding: 14, borderRadius: 14, background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.3)" }}>
+                <div style={{ fontSize: 11, opacity: 0.55 }}>Total won</div>
+                <div style={{ fontFamily: F, fontWeight: 700, fontSize: 20 }}>🪙 {coins(stats.totalWon)}</div>
+              </div>
+            </div>
+
+            <h3 style={{ fontFamily: F, fontSize: 14, margin: "18px 0 8px" }}>My Games</h3>
+            {recent.length === 0 && <div style={{ opacity: 0.5, fontSize: 13 }}>No games yet.</div>}
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {recent.map(h => (
+                <div key={h.roundId} style={{ display: "flex", justifyContent: "space-between", padding: "8px 12px", borderRadius: 10, background: "rgba(255,255,255,0.05)", fontSize: 13 }}>
+                  <span>{h.room || "Room"}</span>
+                  <span style={{ color: h.delta > 0 ? "#34D399" : "rgba(255,255,255,0.5)", fontWeight: 700 }}>{h.delta > 0 ? "+" : ""}{coins(h.delta)}</span>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 type EscrowStage = "idle" | "opening" | "awaiting-signature" | "pending" | "confirmed" | "insufficient" | "failed";
 
 const STAGE_STEP: Record<EscrowStage, number> = {
@@ -336,6 +423,7 @@ export default function DesktopApp() {
   const [walletAddr, setWalletAddr] = useState<string | null>(null);
   const [skinsOpen, setSkinsOpen] = useState(false);
   const [walletOpen, setWalletOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => { getRooms().then(r => { if (r?.length) { setRooms(r); setLive(true); } }).catch(() => {}); }, []);
@@ -430,6 +518,9 @@ export default function DesktopApp() {
           </div>
         </div>
         <div style={{ flex: 1 }} />
+        <button onClick={() => setProfileOpen(true)} style={{ marginRight: 8, background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.15)", color: "white", borderRadius: 100, padding: "9px 16px", fontFamily: F, fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
+          👤 Profile
+        </button>
         <button onClick={() => setWalletOpen(true)} style={{ marginRight: 8, background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.15)", color: "white", borderRadius: 100, padding: "9px 16px", fontFamily: F, fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
           💼 Wallet
         </button>
@@ -440,6 +531,7 @@ export default function DesktopApp() {
       </header>
       {skinsOpen && <SkinsModal walletAddr={walletAddr} onClose={() => setSkinsOpen(false)} />}
       {walletOpen && <WalletModal walletAddr={walletAddr} onClose={() => setWalletOpen(false)} />}
+      {profileOpen && <ProfileModal walletAddr={walletAddr} onClose={() => setProfileOpen(false)} />}
 
       {pending ? (
         <WaitingRoomScreen pending={pending} walletAddr={walletAddr} onStart={beginGame} />
