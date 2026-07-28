@@ -49,6 +49,19 @@ async function jpost<T>(path: string, body?: unknown): Promise<T> {
 export const getRooms = () => jget<Room[]>("/rooms");
 export const getShop = () => jget<Record<string, unknown[]>>("/shop");
 
+export interface NetworkInfo { chainId: number; networkId: number; rpcUrl: string; }
+export const getNetwork = () => jget<NetworkInfo>("/network");
+
+export interface CosmeticItem {
+  id: string; name: string; emoji: string; priceGems: number;
+  effect: string | null; badge: string | null;
+}
+export const getCosmeticsShop = () => jget<CosmeticItem[]>("/shop/cosmetics");
+export const getGems = (address: string) => jget<{ address: string; gems: number }>(`/players/${address}/gems`);
+// DEV ONLY: mints test gems until a real payment processor is wired up.
+export const topupGems = (address: string, amount = 200) =>
+  jpost<{ address: string; gems: number }>(`/players/${address}/gems/topup`, { amount });
+
 export interface RoundInfo {
   roundId: string;
   entryFee: number;   // base entry (uCNPY) for 1 card

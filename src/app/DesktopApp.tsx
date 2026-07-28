@@ -4,8 +4,8 @@
 // draw, on-chain settle) and FleetWallet, reusing src/lib/api.ts + wallet.ts.
 
 import { useEffect, useRef, useState } from "react";
-import { apiBase, createRound, joinRound, roundSocket, getRooms, getRoundInfo, getCard, registerRound, entryCost, type Room } from "../lib/api";
-import { waitForFleet, connectWallet, walletBalance, disconnectWallet, hasFleet, bingoJoin, WALLET_METHOD_MISSING } from "../lib/wallet";
+import { apiBase, createRound, joinRound, roundSocket, getRooms, getRoundInfo, getCard, registerRound, entryCost, getNetwork, getCosmeticsShop, getGems, topupGems, type Room, type CosmeticItem } from "../lib/api";
+import { waitForFleet, connectWallet, walletBalance, disconnectWallet, hasFleet, bingoJoin, buyCosmetic, WALLET_METHOD_MISSING } from "../lib/wallet";
 
 const COLS = ["B", "I", "N", "G", "O"];
 const COL_COLORS = ["#3B82F6", "#EC4899", "#10B981", "#F59E0B", "#8B5CF6"];
@@ -65,6 +65,80 @@ function WalletButton({ onAccount }: { onAccount?: (a: string | null) => void })
   );
 }
 
+function SkinsModal({ walletAddr, onClose }: { walletAddr: string | null; onClose: () => void }) {
+  const [items, setItems] = useState<CosmeticItem[]>([]);
+  const [gems, setGems] = useState<number | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [topupBusy, setTopupBusy] = useState(false);
+  const [msg, setMsg] = useState("");
+
+  useEffect(() => { getCosmeticsShop().then(setItems).catch(() => {}); }, []);
+  useEffect(() => { if (walletAddr) getGems(walletAddr).then(g => setGems(g.gems)).catch(() => {}); }, [walletAddr]);
+
+  async function topup() {
+    if (!walletAddr) return;
+    setTopupBusy(true); setMsg("");
+    try { const g = await topupGems(walletAddr, 200); setGems(g.gems); setMsg("+200 gems added (dev top-up)"); }
+    catch (e: any) { setMsg(String(e?.message || e)); }
+    finally { setTopupBusy(false); }
+  }
+
+  async function buy(item: CosmeticItem) {
+    if (!walletAddr || !hasFleet()) { setMsg("Connect FleetWallet first"); return; }
+    setBusyId(item.id); setMsg("");
+    try {
+      const net = await getNetwork();
+      await buyCosmetic({ kind: item.id, name: item.name, priceGems: item.priceGems, ...net });
+      const g = await getGems(walletAddr); setGems(g.gems);
+      setMsg(`${item.name} minted to your wallet ✓`);
+    } catch (e: any) {
+      setMsg(e?.code === WALLET_METHOD_MISSING ? "Your wallet doesn't support this yet" : String(e?.message || e));
+    } finally { setBusyId(null); }
+  }
+
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50 }} onClick={onClose}>
+      <div onClick={e => e.stopPropagation()} style={{ background: "#1E1B4B", borderRadius: 24, padding: 26, width: 480, maxWidth: "92vw", maxHeight: "82vh", overflowY: "auto", border: "1px solid rgba(255,255,255,0.1)", color: "white", fontFamily: N }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+          <h2 style={{ fontFamily: F, margin: 0, fontSize: 22 }}>🎨 Card Skins</h2>
+          <button onClick={onClose} style={{ background: "none", border: "none", color: "white", fontSize: 20, cursor: "pointer" }}>✕</button>
+        </div>
+        <div style={{ color: "rgba(255,255,255,0.55)", fontSize: 12, marginBottom: 14 }}>
+          Each skin mints a real on-chain cosmetic NFT to your wallet, paid in gems.
+        </div>
+        {!walletAddr && (
+          <div style={{ padding: 12, borderRadius: 12, background: "rgba(239,68,68,0.14)", marginBottom: 14, fontSize: 13 }}>
+            Connect FleetWallet to buy skins.
+          </div>
+        )}
+        {walletAddr && (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14, padding: "10px 14px", borderRadius: 12, background: "rgba(255,255,255,0.06)" }}>
+            <span>💎 {gems ?? "—"} gems</span>
+            <button onClick={topup} disabled={topupBusy} style={{ background: "rgba(139,92,246,0.28)", border: "none", color: "white", borderRadius: 100, padding: "6px 12px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+              {topupBusy ? "Adding…" : "+200 (dev top-up)"}
+            </button>
+          </div>
+        )}
+        {msg && <div style={{ fontSize: 12, color: "#FBBF24", marginBottom: 12 }}>{msg}</div>}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          {items.map(item => (
+            <div key={item.id} style={{ borderRadius: 16, padding: 14, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}>
+              <div style={{ fontSize: 30 }}>{item.emoji}</div>
+              <div style={{ fontFamily: F, fontWeight: 700 }}>{item.name}</div>
+              {item.badge && <span style={{ fontSize: 10, color: "#FBBF24", fontWeight: 700 }}>{item.badge}</span>}
+              <div style={{ fontSize: 13, opacity: 0.7, margin: "4px 0 10px" }}>💎 {item.priceGems} gems</div>
+              <button disabled={!walletAddr || busyId === item.id} onClick={() => buy(item)} style={{
+                width: "100%", padding: "8px 0", borderRadius: 10, border: "none", cursor: walletAddr ? "pointer" : "default",
+                background: walletAddr ? "linear-gradient(135deg,#8B5CF6,#6366F1)" : "rgba(255,255,255,0.1)", color: "white", fontWeight: 700, fontSize: 13,
+              }}>{busyId === item.id ? "Confirm in wallet…" : "Buy"}</button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 type GameState = {
   roundId: string; room: Room; numCards: number; playerAddr: string; card: number[][];
   current: { l: string; n: number } | null; recent: { l: string; n: number }[]; marked: Set<number>; count: number;
@@ -80,6 +154,7 @@ export default function DesktopApp() {
   const [progress, setProgress] = useState("");
   const [err, setErr] = useState("");
   const [walletAddr, setWalletAddr] = useState<string | null>(null);
+  const [skinsOpen, setSkinsOpen] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => { getRooms().then(r => { if (r?.length) { setRooms(r); setLive(true); } }).catch(() => {}); }, []);
@@ -158,8 +233,12 @@ export default function DesktopApp() {
           </div>
         </div>
         <div style={{ flex: 1 }} />
+        <button onClick={() => setSkinsOpen(true)} style={{ marginRight: 12, background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.15)", color: "white", borderRadius: 100, padding: "9px 16px", fontFamily: F, fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
+          🎨 Skins
+        </button>
         <WalletButton onAccount={setWalletAddr} />
       </header>
+      {skinsOpen && <SkinsModal walletAddr={walletAddr} onClose={() => setSkinsOpen(false)} />}
 
       {!game ? (
         /* ── Lobby ─────────────────────────────────────────────── */
