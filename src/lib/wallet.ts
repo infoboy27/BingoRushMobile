@@ -63,6 +63,22 @@ export async function connectWallet(): Promise<FleetAccount> {
   return { ...acc, address: (acc.address || "").replace(/^0x/, "").toLowerCase() };
 }
 
+/**
+ * Silently restore a connection this origin was already granted (no popup) —
+ * call on page load so a refresh doesn't force the user to reconnect. Returns
+ * null if there's no prior grant (getAccount rejects / isn't available).
+ */
+export async function tryReconnect(): Promise<FleetAccount | null> {
+  if (!hasFleet() || !window.fleet!.getAccount) return null;
+  try {
+    const acc = await window.fleet!.getAccount();
+    if (!acc?.address) return null;
+    return { ...acc, address: acc.address.replace(/^0x/, "").toLowerCase() };
+  } catch {
+    return null;
+  }
+}
+
 export async function walletBalance(): Promise<FleetBalance | null> {
   if (!hasFleet() || !window.fleet!.getBalance) return null;
   try { return await window.fleet!.getBalance(); } catch { return null; }
