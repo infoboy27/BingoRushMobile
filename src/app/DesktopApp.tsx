@@ -582,7 +582,7 @@ export default function DesktopApp() {
   async function play(room: Room) {
     try {
       setBusy(true); setErr(""); setStage("opening");
-      const r = await createRound({ entry_fee: Math.round(room.entryFee * 1_000_000), rake_bps: room.rakeBps, payout_weights_bps: [10000] });
+      const r = await createRound({ entry_fee: Math.round(room.entryFee * 1_000_000), rake_bps: room.rakeBps, payout_weights_bps: [10000], room: room.name });
 
       // If a FleetWallet is connected, the PLAYER signs their own entry
       // (bingo_join). Otherwise the server provisions a demo player.
