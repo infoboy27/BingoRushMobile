@@ -52,6 +52,15 @@ export const getShop = () => jget<Record<string, unknown[]>>("/shop");
 export interface NetworkInfo { chainId: number; networkId: number; rpcUrl: string; }
 export const getNetwork = () => jget<NetworkInfo>("/network");
 
+export interface RoundHistoryEntry {
+  roundId: string; room: string; entryFee: number; rakeBps: number;
+  winners: string[]; delta: number; txHash: string; settledAt: number;
+}
+export interface WalletInfo {
+  address: string; available: number; locked: number; history: RoundHistoryEntry[];
+}
+export const getWallet = (address: string) => jget<WalletInfo>(`/players/${address}/wallet`);
+
 export interface CosmeticItem {
   id: string; name: string; emoji: string; priceGems: number;
   effect: string | null; badge: string | null;

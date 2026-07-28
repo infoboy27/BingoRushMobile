@@ -4,7 +4,7 @@
 // draw, on-chain settle) and FleetWallet, reusing src/lib/api.ts + wallet.ts.
 
 import { useEffect, useRef, useState } from "react";
-import { apiBase, createRound, joinRound, roundSocket, getRooms, getRoundInfo, getCard, registerRound, entryCost, getNetwork, getCosmeticsShop, getGems, topupGems, type Room, type CosmeticItem } from "../lib/api";
+import { apiBase, createRound, joinRound, roundSocket, getRooms, getRoundInfo, getCard, registerRound, entryCost, getNetwork, getCosmeticsShop, getGems, topupGems, getWallet, type Room, type CosmeticItem, type WalletInfo } from "../lib/api";
 import { waitForFleet, connectWallet, walletBalance, disconnectWallet, hasFleet, bingoJoin, buyCosmetic, WALLET_METHOD_MISSING } from "../lib/wallet";
 
 const COLS = ["B", "I", "N", "G", "O"];
@@ -139,6 +139,72 @@ function SkinsModal({ walletAddr, onClose }: { walletAddr: string | null; onClos
   );
 }
 
+function WalletModal({ walletAddr, onClose }: { walletAddr: string | null; onClose: () => void }) {
+  const [w, setW] = useState<WalletInfo | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!walletAddr) { setLoading(false); return; }
+    getWallet(walletAddr).then(setW).catch(() => {}).finally(() => setLoading(false));
+  }, [walletAddr]);
+
+  const coins = (u: number) => (u / 1_000_000).toLocaleString(undefined, { maximumFractionDigits: 2 });
+  const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
+  const date = (secs: number) => new Date(secs * 1000).toLocaleString();
+
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50 }} onClick={onClose}>
+      <div onClick={e => e.stopPropagation()} style={{ background: "#1E1B4B", borderRadius: 24, padding: 26, width: 520, maxWidth: "92vw", maxHeight: "82vh", overflowY: "auto", border: "1px solid rgba(255,255,255,0.1)", color: "white", fontFamily: N }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+          <h2 style={{ fontFamily: F, margin: 0, fontSize: 22 }}>💼 Wallet</h2>
+          <button onClick={onClose} style={{ background: "none", border: "none", color: "white", fontSize: 20, cursor: "pointer" }}>✕</button>
+        </div>
+
+        {!walletAddr && (
+          <div style={{ padding: 12, borderRadius: 12, background: "rgba(239,68,68,0.14)", fontSize: 13 }}>
+            Connect FleetWallet to see your balance and history.
+          </div>
+        )}
+
+        {walletAddr && loading && <div style={{ opacity: 0.6, fontSize: 13 }}>Loading…</div>}
+
+        {walletAddr && w && (
+          <>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 18 }}>
+              <div style={{ padding: 16, borderRadius: 16, background: "rgba(52,211,153,0.12)", border: "1px solid rgba(52,211,153,0.3)" }}>
+                <div style={{ fontSize: 11, opacity: 0.7 }}>Available</div>
+                <div style={{ fontFamily: F, fontWeight: 700, fontSize: 22 }}>🪙 {coins(w.available)}</div>
+              </div>
+              <div style={{ padding: 16, borderRadius: 16, background: "rgba(139,92,246,0.12)", border: "1px solid rgba(139,92,246,0.3)" }}>
+                <div style={{ fontSize: 11, opacity: 0.7 }}>Locked in rooms</div>
+                <div style={{ fontFamily: F, fontWeight: 700, fontSize: 22 }}>🔒 {coins(w.locked)}</div>
+              </div>
+            </div>
+
+            <div style={{ fontSize: 11, opacity: 0.5, marginBottom: 6 }}>{short(w.address)}</div>
+
+            <h3 style={{ fontFamily: F, fontSize: 15, margin: "18px 0 10px" }}>History</h3>
+            {w.history.length === 0 && <div style={{ opacity: 0.5, fontSize: 13 }}>No settled rounds yet.</div>}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {w.history.map(h => (
+                <div key={h.roundId} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", borderRadius: 12, background: "rgba(255,255,255,0.05)" }}>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: 13 }}>{h.room || "Room"}</div>
+                    <div style={{ fontSize: 11, opacity: 0.5 }}>{date(h.settledAt)} · tx {h.txHash.slice(0, 8)}…</div>
+                  </div>
+                  <div style={{ fontFamily: F, fontWeight: 700, fontSize: 14, color: h.delta > 0 ? "#34D399" : "rgba(255,255,255,0.6)" }}>
+                    {h.delta > 0 ? "+" : ""}{coins(h.delta)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 type GameState = {
   roundId: string; room: Room; numCards: number; playerAddr: string; card: number[][];
   current: { l: string; n: number } | null; recent: { l: string; n: number }[]; marked: Set<number>; count: number;
@@ -155,6 +221,7 @@ export default function DesktopApp() {
   const [err, setErr] = useState("");
   const [walletAddr, setWalletAddr] = useState<string | null>(null);
   const [skinsOpen, setSkinsOpen] = useState(false);
+  const [walletOpen, setWalletOpen] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => { getRooms().then(r => { if (r?.length) { setRooms(r); setLive(true); } }).catch(() => {}); }, []);
@@ -233,12 +300,16 @@ export default function DesktopApp() {
           </div>
         </div>
         <div style={{ flex: 1 }} />
+        <button onClick={() => setWalletOpen(true)} style={{ marginRight: 8, background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.15)", color: "white", borderRadius: 100, padding: "9px 16px", fontFamily: F, fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
+          💼 Wallet
+        </button>
         <button onClick={() => setSkinsOpen(true)} style={{ marginRight: 12, background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.15)", color: "white", borderRadius: 100, padding: "9px 16px", fontFamily: F, fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
           🎨 Skins
         </button>
         <WalletButton onAccount={setWalletAddr} />
       </header>
       {skinsOpen && <SkinsModal walletAddr={walletAddr} onClose={() => setSkinsOpen(false)} />}
+      {walletOpen && <WalletModal walletAddr={walletAddr} onClose={() => setWalletOpen(false)} />}
 
       {!game ? (
         /* ── Lobby ─────────────────────────────────────────────── */
