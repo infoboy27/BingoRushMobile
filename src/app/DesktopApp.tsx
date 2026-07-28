@@ -5,7 +5,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { apiBase, createRound, joinRound, roundSocket, chatSocket, getRooms, getRoundInfo, getCard, registerRound, entryCost, getNetwork, getCosmeticsShop, getGems, topupGems, getWallet, getPlayerStats, getPlayerHistory, type Room, type CosmeticItem, type WalletInfo, type PlayerStats, type RoundHistoryEntry } from "../lib/api";
-import { waitForFleet, connectWallet, walletBalance, disconnectWallet, hasFleet, bingoJoin, buyCosmetic, WALLET_METHOD_MISSING } from "../lib/wallet";
+import { waitForFleet, connectWallet, tryReconnect, walletBalance, disconnectWallet, hasFleet, bingoJoin, buyCosmetic, WALLET_METHOD_MISSING } from "../lib/wallet";
 
 const COLS = ["B", "I", "N", "G", "O"];
 const COL_COLORS = ["#3B82F6", "#EC4899", "#10B981", "#F59E0B", "#8B5CF6"];
@@ -41,7 +41,17 @@ function WalletButton({ onAccount }: { onAccount?: (a: string | null) => void })
   const [addr, setAddr] = useState<string | null>(null);
   const [bal, setBal] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  useEffect(() => { waitForFleet(700).then(setAvail); }, []);
+  useEffect(() => {
+    waitForFleet(700).then(async (ok) => {
+      setAvail(ok);
+      if (!ok) return;
+      const acc = await tryReconnect();
+      if (!acc) return;
+      setAddr(acc.address); onAccount?.(acc.address);
+      const b = await walletBalance(); if (b) setBal(`${b.whole} ${b.symbol}`);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   async function connect() {
     try { setBusy(true); const a = await connectWallet(); setAddr(a.address); onAccount?.(a.address); const b = await walletBalance(); if (b) setBal(`${b.whole} ${b.symbol}`); }
     catch { /* ignore */ } finally { setBusy(false); }
@@ -448,6 +458,13 @@ export default function DesktopApp() {
         try {
           const info = await getRoundInfo(r.roundId);
           const amount = entryCost(info.entryFee, numCards);
+          const w = await getWallet(walletAddr);
+          if (w.available < amount) {
+            setStage("insufficient");
+            setErr(`You have ${(w.available / 1_000_000).toFixed(2)} coins, this room needs ${(amount / 1_000_000).toFixed(2)}.`);
+            setBusy(false);
+            return;
+          }
           setStage("awaiting-signature");
           await bingoJoin({ roundId: r.roundId, numCards, amount, rpcUrl: info.rpcUrl, chainId: info.chainId, networkId: info.networkId });
           setStage("pending");
