@@ -4,7 +4,7 @@
 // draw, on-chain settle) and FleetWallet, reusing src/lib/api.ts + wallet.ts.
 
 import { useEffect, useRef, useState } from "react";
-import { apiBase, createRound, joinRound, roundSocket, getRooms, getRoundInfo, getCard, registerRound, entryCost, getNetwork, getCosmeticsShop, getGems, topupGems, getWallet, type Room, type CosmeticItem, type WalletInfo } from "../lib/api";
+import { apiBase, createRound, joinRound, roundSocket, chatSocket, getRooms, getRoundInfo, getCard, registerRound, entryCost, getNetwork, getCosmeticsShop, getGems, topupGems, getWallet, type Room, type CosmeticItem, type WalletInfo } from "../lib/api";
 import { waitForFleet, connectWallet, walletBalance, disconnectWallet, hasFleet, bingoJoin, buyCosmetic, WALLET_METHOD_MISSING } from "../lib/wallet";
 
 const COLS = ["B", "I", "N", "G", "O"];
@@ -226,11 +226,110 @@ type GameState = {
   status: string; done: boolean; won?: boolean; wonCoins?: number;
 };
 
+type PendingGame = {
+  roundId: string; room: Room; numCards: number; playerAddr: string; myCards: number[][][];
+};
+
+const WAITING_ROOM_SECONDS = 15;
+
+function WaitingRoomScreen({ pending, walletAddr, onStart }: {
+  pending: PendingGame; walletAddr: string | null; onStart: () => void;
+}) {
+  const [messages, setMessages] = useState<{ user: string; text: string }[]>([]);
+  const [chatInput, setChatInput] = useState("");
+  const [seconds, setSeconds] = useState(WAITING_ROOM_SECONDS);
+  const chatRef = useRef<WebSocket | null>(null);
+  const startedRef = useRef(false);
+
+  function start() {
+    if (startedRef.current) return;
+    startedRef.current = true;
+    onStart();
+  }
+
+  useEffect(() => {
+    const ws = chatSocket(pending.roundId);
+    chatRef.current = ws;
+    ws.onmessage = (ev) => {
+      const m = JSON.parse(ev.data);
+      if (m.type === "chat") setMessages((prev) => [...prev, { user: m.user, text: m.text }]);
+    };
+    return () => ws.close();
+  }, [pending.roundId]);
+
+  useEffect(() => {
+    const t = setInterval(() => {
+      setSeconds((s) => {
+        if (s <= 1) { clearInterval(t); start(); return 0; }
+        return s - 1;
+      });
+    }, 1000);
+    return () => clearInterval(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function send() {
+    const text = chatInput.trim();
+    if (!text || !chatRef.current || chatRef.current.readyState !== WebSocket.OPEN) return;
+    const user = walletAddr ? `${walletAddr.slice(0, 6)}…` : "You";
+    chatRef.current.send(JSON.stringify({ user, text }));
+    setChatInput("");
+  }
+
+  return (
+    <main style={{ maxWidth: 720, margin: "0 auto", padding: "40px 32px 64px" }}>
+      <div style={{ textAlign: "center", marginBottom: 22 }}>
+        <h1 style={{ fontFamily: F, fontWeight: 700, fontSize: 32, margin: 0 }}>{pending.room.name}</h1>
+        <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 14, marginTop: 6 }}>Waiting room · starting in {seconds}s</p>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
+        <div style={{ padding: 16, borderRadius: 16, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}>
+          <div style={{ fontSize: 11, opacity: 0.55, marginBottom: 10, letterSpacing: 0.5 }}>PLAYERS</div>
+          <div style={{ display: "flex", justifyContent: "space-between", padding: "5px 0" }}>
+            <span>🧑 You</span><span style={{ color: "#34D399", fontSize: 12, fontWeight: 700 }}>Ready ✓</span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", padding: "5px 0" }}>
+            <span>🤖 Bot opponent</span><span style={{ color: "#34D399", fontSize: 12, fontWeight: 700 }}>Ready ✓</span>
+          </div>
+        </div>
+        <div style={{ padding: 16, borderRadius: 16, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}>
+          <div style={{ fontSize: 11, opacity: 0.55, marginBottom: 10, letterSpacing: 0.5 }}>ROOM</div>
+          <div style={{ fontSize: 13 }}>Entry: 🪙 {pending.room.entryFee}</div>
+          <div style={{ fontSize: 13, marginTop: 4 }}>Cards: {pending.numCards}</div>
+          <div style={{ fontSize: 11, opacity: 0.4, marginTop: 10 }}>{pending.roundId.slice(0, 10)}…</div>
+        </div>
+      </div>
+
+      <div style={{ padding: 16, borderRadius: 16, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", marginBottom: 20 }}>
+        <div style={{ fontSize: 11, opacity: 0.55, marginBottom: 10, letterSpacing: 0.5 }}>CHAT</div>
+        <div style={{ height: 110, overflowY: "auto", display: "flex", flexDirection: "column", gap: 5, marginBottom: 10 }}>
+          {messages.length === 0 && <div style={{ opacity: 0.4, fontSize: 12 }}>No messages yet — say hi.</div>}
+          {messages.map((m, i) => <div key={i} style={{ fontSize: 13 }}><b>{m.user}:</b> {m.text}</div>)}
+        </div>
+        <div style={{ display: "flex", gap: 8 }}>
+          <input
+            value={chatInput} onChange={(e) => setChatInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && send()} placeholder="Say something…"
+            style={{ flex: 1, padding: "9px 12px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.15)", background: "rgba(255,255,255,0.05)", color: "white", fontFamily: N }}
+          />
+          <button onClick={send} style={{ padding: "9px 18px", borderRadius: 10, border: "none", background: "rgba(139,92,246,0.35)", color: "white", cursor: "pointer", fontFamily: F, fontWeight: 700 }}>Send</button>
+        </div>
+      </div>
+
+      <button onClick={start} style={{ width: "100%", padding: "14px 0", borderRadius: 14, border: "none", cursor: "pointer", background: "linear-gradient(135deg,#34D399,#22A877)", color: "#04231A", fontFamily: F, fontWeight: 700, fontSize: 16 }}>
+        ✓ I'm Ready — Start Now
+      </button>
+    </main>
+  );
+}
+
 export default function DesktopApp() {
   const [rooms, setRooms] = useState<Room[]>(MOCK_ROOMS);
   const [live, setLive] = useState(false);
   const [numCards, setNumCards] = useState(1);
   const [game, setGame] = useState<GameState | null>(null);
+  const [pending, setPending] = useState<PendingGame | null>(null);
   const [busy, setBusy] = useState(false);
   const [stage, setStage] = useState<EscrowStage>("idle");
   const [err, setErr] = useState("");
@@ -280,34 +379,44 @@ export default function DesktopApp() {
 
       await joinRound(r.roundId, 1); // one bot opponent
       setStage("confirmed");
-      const g: GameState = {
-        roundId: r.roundId, room, numCards, playerAddr: myAddr, card: myCards[0],
-        current: null, recent: [], marked: new Set(), count: 0, status: "Waiting for the draw…", done: false,
-      };
-      setGame(g);
+      // The round's ball draw only actually starts once the game WS connects
+      // (see gameserver/app.py ws_round) — so pausing here in a real waiting
+      // room costs nothing on-chain; nothing has been "skipped".
+      setPending({ roundId: r.roundId, room, numCards, playerAddr: myAddr, myCards });
       setBusy(false);
-      const ws = roundSocket(r.roundId); wsRef.current = ws;
-      ws.onmessage = (ev) => {
-        const m = JSON.parse(ev.data);
-        setGame(prev => {
-          if (!prev) return prev;
-          if (m.type === "ball") {
-            const marked = new Set(prev.marked); marked.add(m.number);
-            return { ...prev, current: { l: m.letter, n: m.number }, count: m.index, marked, status: "Drawing…", recent: [{ l: m.letter, n: m.number }, ...prev.recent].slice(0, 6) };
-          }
-          if (m.type === "bingo") return { ...prev, status: `BINGO at ball ${m.balls}! Settling on-chain…` };
-          if (m.type === "settled") {
-            const mine = (m.payouts || {})[prev.playerAddr] || 0;
-            return { ...prev, done: true, won: mine > 0, wonCoins: Math.round(mine / 1_000_000), status: mine > 0 ? "You won! Paid from escrow ✓" : "So close! The bot got there first." };
-          }
-          return prev;
-        });
-      };
-      ws.onerror = () => setGame(prev => prev ? { ...prev, status: "connection error", done: true } : prev);
     } catch (e: any) { failStage(e); }
   }
 
-  function exit() { wsRef.current?.close(); setGame(null); setStage("idle"); }
+  function beginGame() {
+    if (!pending) return;
+    const { roundId, room, numCards, playerAddr, myCards } = pending;
+    setPending(null);
+    const g: GameState = {
+      roundId, room, numCards, playerAddr, card: myCards[0],
+      current: null, recent: [], marked: new Set(), count: 0, status: "Waiting for the draw…", done: false,
+    };
+    setGame(g);
+    const ws = roundSocket(roundId); wsRef.current = ws;
+    ws.onmessage = (ev) => {
+      const m = JSON.parse(ev.data);
+      setGame(prev => {
+        if (!prev) return prev;
+        if (m.type === "ball") {
+          const marked = new Set(prev.marked); marked.add(m.number);
+          return { ...prev, current: { l: m.letter, n: m.number }, count: m.index, marked, status: "Drawing…", recent: [{ l: m.letter, n: m.number }, ...prev.recent].slice(0, 6) };
+        }
+        if (m.type === "bingo") return { ...prev, status: `BINGO at ball ${m.balls}! Settling on-chain…` };
+        if (m.type === "settled") {
+          const mine = (m.payouts || {})[prev.playerAddr] || 0;
+          return { ...prev, done: true, won: mine > 0, wonCoins: Math.round(mine / 1_000_000), status: mine > 0 ? "You won! Paid from escrow ✓" : "So close! The bot got there first." };
+        }
+        return prev;
+      });
+    };
+    ws.onerror = () => setGame(prev => prev ? { ...prev, status: "connection error", done: true } : prev);
+  }
+
+  function exit() { wsRef.current?.close(); setGame(null); setPending(null); setStage("idle"); }
 
   return (
     <div style={{ minHeight: "100vh", background: "linear-gradient(160deg,#2E1065 0%,#1E1B4B 45%,#0F172A 100%)", color: "white", fontFamily: N }}>
@@ -332,7 +441,9 @@ export default function DesktopApp() {
       {skinsOpen && <SkinsModal walletAddr={walletAddr} onClose={() => setSkinsOpen(false)} />}
       {walletOpen && <WalletModal walletAddr={walletAddr} onClose={() => setWalletOpen(false)} />}
 
-      {!game ? (
+      {pending ? (
+        <WaitingRoomScreen pending={pending} walletAddr={walletAddr} onStart={beginGame} />
+      ) : !game ? (
         /* ── Lobby ─────────────────────────────────────────────── */
         <main style={{ maxWidth: 1120, margin: "0 auto", padding: "40px 32px 64px" }}>
           <div style={{ textAlign: "center", marginBottom: 8 }}>

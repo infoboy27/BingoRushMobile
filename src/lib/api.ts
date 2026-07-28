@@ -121,3 +121,9 @@ export function roundSocket(roundId: string): WebSocket {
   const wsBase = API_BASE.replace(/^http/, "ws");
   return new WebSocket(`${wsBase}/ws/rounds/${roundId}`);
 }
+
+// Ephemeral waiting-room chat for a round. Messages: { type:"chat", user, text }.
+export function chatSocket(roundId: string): WebSocket {
+  const wsBase = API_BASE.replace(/^http/, "ws");
+  return new WebSocket(`${wsBase}/ws/rounds/${roundId}/chat`);
+}
