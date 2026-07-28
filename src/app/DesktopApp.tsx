@@ -4,7 +4,7 @@
 // draw, on-chain settle) and FleetWallet, reusing src/lib/api.ts + wallet.ts.
 
 import { useEffect, useRef, useState } from "react";
-import { apiBase, createRound, joinRound, roundSocket, chatSocket, getRooms, getRoundInfo, getCard, registerRound, entryCost, getNetwork, getCosmeticsShop, getGems, topupGems, getWallet, getPlayerStats, getPlayerHistory, type Room, type CosmeticItem, type WalletInfo, type PlayerStats, type RoundHistoryEntry } from "../lib/api";
+import { apiBase, createRound, joinRound, roundSocket, chatSocket, getRooms, getRoundInfo, getCard, registerRound, entryCost, getNetwork, getCosmeticsShop, getGems, topupGems, getWallet, getPlayerStats, getPlayerHistory, getLeaderboard, type Room, type CosmeticItem, type WalletInfo, type PlayerStats, type RoundHistoryEntry, type LeaderboardPeriod, type LeaderboardEntry } from "../lib/api";
 import { waitForFleet, connectWallet, tryReconnect, walletBalance, disconnectWallet, hasFleet, bingoJoin, buyCosmetic, WALLET_METHOD_MISSING } from "../lib/wallet";
 
 const COLS = ["B", "I", "N", "G", "O"];
@@ -421,6 +421,139 @@ function WaitingRoomScreen({ pending, walletAddr, onStart }: {
   );
 }
 
+type ShellView = "home" | "games" | "rooms" | "leaderboard";
+
+const GAMES_CATALOG: { id: string; name: string; emoji: string; tagline: string; status: "live" | "soon" }[] = [
+  { id: "bingo", name: "Bingo", emoji: "🅱️", tagline: "Provably-fair multiplayer bingo with on-chain payouts.", status: "live" },
+  { id: "poker", name: "Poker", emoji: "🃏", tagline: "Texas Hold'em with on-chain buy-ins.", status: "soon" },
+  { id: "domino", name: "Domino", emoji: "🁢", tagline: "Head-to-head domino tournaments.", status: "soon" },
+  { id: "pool", name: "Pool", emoji: "🎱", tagline: "8-ball duels with instant payouts.", status: "soon" },
+  { id: "roulette", name: "Roulette", emoji: "🎡", tagline: "Provably-fair roulette tables.", status: "soon" },
+];
+
+function Sidebar({ view, setView }: { view: ShellView; setView: (v: ShellView) => void }) {
+  const items: { key: ShellView; label: string; icon: string }[] = [
+    { key: "home", label: "Home", icon: "🏠" },
+    { key: "games", label: "Games", icon: "🎮" },
+    { key: "rooms", label: "Rooms", icon: "🎲" },
+    { key: "leaderboard", label: "Leaderboard", icon: "🏆" },
+  ];
+  return (
+    <nav style={{ width: 200, flexShrink: 0, padding: "24px 12px", display: "flex", flexDirection: "column", gap: 4 }}>
+      {items.map(it => (
+        <button key={it.key} onClick={() => setView(it.key)} style={{
+          display: "flex", alignItems: "center", gap: 10, padding: "11px 14px", borderRadius: 12, border: "none", cursor: "pointer",
+          background: view === it.key ? "rgba(251,191,36,0.14)" : "transparent", color: view === it.key ? "#FBBF24" : "rgba(255,255,255,0.75)",
+          fontFamily: F, fontWeight: 700, fontSize: 14, textAlign: "left",
+        }}>
+          <span>{it.icon}</span><span>{it.label}</span>
+        </button>
+      ))}
+      <div style={{ height: 1, background: "rgba(255,255,255,0.08)", margin: "10px 4px" }} />
+      {[{ label: "Tournaments", icon: "🃏" }, { label: "Rewards", icon: "🎁" }].map(it => (
+        <div key={it.label} title="Coming soon" style={{
+          display: "flex", alignItems: "center", gap: 10, padding: "11px 14px", borderRadius: 12,
+          color: "rgba(255,255,255,0.3)", fontFamily: F, fontWeight: 700, fontSize: 14, cursor: "not-allowed",
+        }}>
+          <span>{it.icon}</span><span>{it.label}</span><span style={{ marginLeft: "auto", fontSize: 10, opacity: 0.7 }}>soon</span>
+        </div>
+      ))}
+    </nav>
+  );
+}
+
+function HomeView({ onPlay, onGames }: { onPlay: () => void; onGames: () => void }) {
+  return (
+    <div style={{ padding: "48px 40px" }}>
+      <h1 style={{ fontFamily: F, fontWeight: 700, fontSize: 42, margin: 0 }}>Welcome to Bingo Rush</h1>
+      <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 15, marginTop: 10, maxWidth: 520 }}>
+        Provably-fair multiplayer bingo, settled on-chain. Every round's seed is committed
+        before you play and revealed at settle — you can verify every win yourself.
+      </p>
+      <div style={{ display: "flex", gap: 12, marginTop: 24 }}>
+        <button onClick={onPlay} style={{ padding: "13px 26px", borderRadius: 14, border: "none", cursor: "pointer", background: "linear-gradient(135deg,#FBBF24,#F59E0B)", color: "#1A1305", fontFamily: F, fontWeight: 700, fontSize: 15 }}>Play Bingo ▶</button>
+        <button onClick={onGames} style={{ padding: "13px 26px", borderRadius: 14, border: "1px solid rgba(255,255,255,0.15)", cursor: "pointer", background: "rgba(255,255,255,0.06)", color: "white", fontFamily: F, fontWeight: 700, fontSize: 15 }}>Browse Games</button>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px,1fr))", gap: 16, marginTop: 40, maxWidth: 760 }}>
+        {["Provably-fair draws", "On-chain escrow", "Automatic payouts", "Transparent house rake"].map(f => (
+          <div key={f} style={{ padding: 16, borderRadius: 14, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", fontFamily: N, fontSize: 13 }}>✓ {f}</div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function GamesLobbyView({ onPlayBingo }: { onPlayBingo: () => void }) {
+  return (
+    <div style={{ padding: 40 }}>
+      <h1 style={{ fontFamily: F, fontWeight: 700, fontSize: 32, margin: "0 0 20px" }}>Games</h1>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px,1fr))", gap: 18 }}>
+        {GAMES_CATALOG.map(g => (
+          <div key={g.id} style={{ padding: 20, borderRadius: 20, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", opacity: g.status === "live" ? 1 : 0.55 }}>
+            <div style={{ fontSize: 34 }}>{g.emoji}</div>
+            <div style={{ fontFamily: F, fontWeight: 700, fontSize: 18, marginTop: 8 }}>{g.name}</div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", marginTop: 4, minHeight: 32 }}>{g.tagline}</div>
+            <span style={{ display: "inline-block", marginTop: 10, padding: "3px 10px", borderRadius: 100, fontSize: 11, fontWeight: 700, background: g.status === "live" ? "rgba(52,211,153,0.16)" : "rgba(255,255,255,0.08)", color: g.status === "live" ? "#34D399" : "rgba(255,255,255,0.5)" }}>
+              {g.status === "live" ? "Live" : "Coming Soon"}
+            </span>
+            <button onClick={g.status === "live" ? onPlayBingo : undefined} disabled={g.status !== "live"} style={{
+              width: "100%", marginTop: 14, padding: "10px 0", borderRadius: 12, border: "none",
+              cursor: g.status === "live" ? "pointer" : "not-allowed",
+              background: g.status === "live" ? "linear-gradient(135deg,#FBBF24,#F59E0B)" : "rgba(255,255,255,0.06)",
+              color: g.status === "live" ? "#1A1305" : "rgba(255,255,255,0.35)", fontFamily: F, fontWeight: 700, fontSize: 14,
+            }}>{g.status === "live" ? "Play ▶" : "Coming Soon"}</button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function LeaderboardView() {
+  const [period, setPeriod] = useState<LeaderboardPeriod>("alltime");
+  const [rows, setRows] = useState<LeaderboardEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    getLeaderboard(period).then(setRows).catch(() => setRows([])).finally(() => setLoading(false));
+  }, [period]);
+
+  const coins = (u: number) => (u / 1_000_000).toLocaleString(undefined, { maximumFractionDigits: 2 });
+  const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
+  const tabs: { key: LeaderboardPeriod; label: string }[] = [
+    { key: "daily", label: "Daily" }, { key: "weekly", label: "Weekly" },
+    { key: "monthly", label: "Monthly" }, { key: "alltime", label: "All Time" },
+  ];
+
+  return (
+    <div style={{ padding: 40 }}>
+      <h1 style={{ fontFamily: F, fontWeight: 700, fontSize: 32, margin: "0 0 16px" }}>🏆 Leaderboard</h1>
+      <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+        {tabs.map(t => (
+          <button key={t.key} onClick={() => setPeriod(t.key)} style={{
+            padding: "8px 16px", borderRadius: 100, border: "none", cursor: "pointer",
+            background: period === t.key ? "rgba(251,191,36,0.18)" : "rgba(255,255,255,0.05)",
+            color: period === t.key ? "#FBBF24" : "rgba(255,255,255,0.6)", fontFamily: F, fontWeight: 700, fontSize: 13,
+          }}>{t.label}</button>
+        ))}
+      </div>
+      {loading && <div style={{ opacity: 0.5, fontSize: 13 }}>Loading…</div>}
+      {!loading && rows.length === 0 && <div style={{ opacity: 0.5, fontSize: 13 }}>No settled rounds yet for this period.</div>}
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, maxWidth: 640 }}>
+        {rows.map((r, i) => (
+          <div key={r.address} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 16px", borderRadius: 14, background: i === 0 ? "rgba(251,191,36,0.1)" : "rgba(255,255,255,0.05)", border: i === 0 ? "1px solid rgba(251,191,36,0.3)" : "1px solid transparent" }}>
+            <div style={{ width: 26, fontFamily: F, fontWeight: 700, color: i === 0 ? "#FBBF24" : "rgba(255,255,255,0.5)" }}>#{i + 1}</div>
+            <div style={{ flex: 1, fontFamily: N, fontSize: 14 }}>{short(r.address)}</div>
+            <div style={{ fontSize: 12, opacity: 0.5 }}>{r.gamesPlayed} games · {r.wins} wins</div>
+            <div style={{ fontFamily: F, fontWeight: 700, color: "#34D399" }}>🪙 {coins(r.totalWon)}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function DesktopApp() {
   const [rooms, setRooms] = useState<Room[]>(MOCK_ROOMS);
   const [live, setLive] = useState(false);
@@ -434,6 +567,7 @@ export default function DesktopApp() {
   const [skinsOpen, setSkinsOpen] = useState(false);
   const [walletOpen, setWalletOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [view, setView] = useState<ShellView>("home");
   const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => { getRooms().then(r => { if (r?.length) { setRooms(r); setLive(true); } }).catch(() => {}); }, []);
@@ -552,78 +686,7 @@ export default function DesktopApp() {
 
       {pending ? (
         <WaitingRoomScreen pending={pending} walletAddr={walletAddr} onStart={beginGame} />
-      ) : !game ? (
-        /* ── Lobby ─────────────────────────────────────────────── */
-        <main style={{ maxWidth: 1120, margin: "0 auto", padding: "40px 32px 64px" }}>
-          <div style={{ textAlign: "center", marginBottom: 8 }}>
-            <h1 style={{ fontFamily: F, fontWeight: 700, fontSize: 44, margin: 0 }}>Choose a Room</h1>
-            <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 15, marginTop: 8 }}>
-              Pick your cards, join on-chain, watch the live draw, and win the pot.
-            </p>
-            <div style={{ fontSize: 12, marginTop: 6, color: live ? "#34D399" : "rgba(255,255,255,0.4)" }}>
-              {live ? "● live rooms" : "○ demo rooms (backend offline)"} · {apiBase}
-            </div>
-          </div>
-
-          {/* Card count selector */}
-          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 12, margin: "28px 0" }}>
-            <span style={{ color: "rgba(255,255,255,0.7)", fontFamily: F, fontWeight: 600 }}>Cards:</span>
-            {[1, 2, 3, 4].map(n => (
-              <button key={n} onClick={() => setNumCards(n)} style={{
-                width: 46, height: 46, borderRadius: 12, fontFamily: F, fontWeight: 700, fontSize: 20, cursor: "pointer",
-                background: numCards === n ? "white" : "rgba(255,255,255,0.1)", color: numCards === n ? "#6D28D9" : "white",
-                border: numCards === n ? "3px solid #FBBF24" : "3px solid transparent",
-              }}>{n}</button>
-            ))}
-            <span style={{ color: "rgba(255,255,255,0.45)", fontSize: 13 }}>+{numCards * 8}% odds</span>
-          </div>
-
-          {busy && (stage === "opening" || stage === "awaiting-signature" || stage === "pending") && (
-            <div style={{ maxWidth: 520, margin: "0 auto 20px", padding: "14px 18px", borderRadius: 14, background: `${STAGE_META[stage].color}22`, border: `1px solid ${STAGE_META[stage].color}55`, textAlign: "center" }}>
-              <div style={{ fontFamily: F, fontWeight: 700, fontSize: 15 }}>{STAGE_META[stage].icon} {STAGE_META[stage].label}…</div>
-              <div style={{ display: "flex", gap: 6, justifyContent: "center", marginTop: 10 }}>
-                {[1, 2, 3].map(s => (
-                  <div key={s} style={{ width: 60, height: 6, borderRadius: 3, background: s <= STAGE_STEP[stage] ? "#8B5CF6" : "rgba(255,255,255,0.15)" }} />
-                ))}
-              </div>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginTop: 8 }}>
-                {stage === "awaiting-signature" ? "check the FleetWallet popup" : "each step is a real on-chain transaction (~4s/block)"}
-              </div>
-            </div>
-          )}
-          {(stage === "insufficient" || stage === "failed") && err && (
-            <div style={{ maxWidth: 520, margin: "0 auto 16px", padding: "12px 18px", borderRadius: 14, background: `${STAGE_META[stage].color}1a`, border: `1px solid ${STAGE_META[stage].color}55`, textAlign: "center" }}>
-              <div style={{ fontFamily: F, fontWeight: 700, fontSize: 14, color: STAGE_META[stage].color }}>{STAGE_META[stage].icon} {STAGE_META[stage].label}</div>
-              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", marginTop: 4 }}>{err}</div>
-            </div>
-          )}
-
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))", gap: 20 }}>
-            {rooms.map((room, i) => {
-              const c = ROOM_COLORS[i % ROOM_COLORS.length];
-              return (
-                <div key={room.id || room.name} style={{ borderRadius: 22, padding: 22, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", boxShadow: "0 10px 30px rgba(0,0,0,0.25)" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 16 }}>
-                    <div style={{ width: 58, height: 58, borderRadius: 16, background: `${c}22`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 30 }}>{room.emoji}</div>
-                    <div>
-                      <div style={{ fontFamily: F, fontWeight: 700, fontSize: 20 }}>{room.name}</div>
-                      <span style={{ padding: "2px 10px", borderRadius: 100, background: `${c}22`, color: c, fontWeight: 800, fontSize: 11 }}>{room.difficulty}</span>
-                    </div>
-                  </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 18 }}>
-                    <div><div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)" }}>Entry</div><div style={{ fontFamily: F, fontWeight: 700, fontSize: 18 }}>🪙 {room.entryFee}</div></div>
-                    <div style={{ textAlign: "right" }}><div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)" }}>Max prize</div><div style={{ fontFamily: F, fontWeight: 700, fontSize: 18, color: "#FBBF24" }}>🪙 {Number(room.advertisedPrize).toLocaleString()}</div></div>
-                  </div>
-                  <button onClick={() => play(room)} disabled={busy} style={{
-                    width: "100%", padding: "13px 0", borderRadius: 14, border: "none", cursor: busy ? "default" : "pointer",
-                    background: busy ? "rgba(255,255,255,0.15)" : `linear-gradient(135deg,${c},#8B5CF6)`, color: "white", fontFamily: F, fontWeight: 700, fontSize: 17,
-                  }}>{busy ? "Opening round…" : `Play ▶`}</button>
-                </div>
-              );
-            })}
-          </div>
-        </main>
-      ) : (
+      ) : game ? (
         /* ── Game ──────────────────────────────────────────────── */
         <main style={{ maxWidth: 1120, margin: "0 auto", padding: "32px", display: "grid", gridTemplateColumns: "1fr 360px", gap: 28, alignItems: "start" }}>
           {/* Left: card */}
@@ -695,6 +758,87 @@ export default function DesktopApp() {
             </div>
           </aside>
         </main>
+      ) : (
+        <div style={{ display: "flex", alignItems: "flex-start" }}>
+          <Sidebar view={view} setView={setView} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            {view === "home" && <HomeView onPlay={() => setView("rooms")} onGames={() => setView("games")} />}
+            {view === "games" && <GamesLobbyView onPlayBingo={() => setView("rooms")} />}
+            {view === "leaderboard" && <LeaderboardView />}
+            {view === "rooms" && (
+              /* ── Rooms ─────────────────────────────────────────── */
+              <main style={{ maxWidth: 1120, margin: "0 auto", padding: "40px 32px 64px" }}>
+                <div style={{ textAlign: "center", marginBottom: 8 }}>
+                  <h1 style={{ fontFamily: F, fontWeight: 700, fontSize: 44, margin: 0 }}>Choose a Room</h1>
+                  <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 15, marginTop: 8 }}>
+                    Pick your cards, join on-chain, watch the live draw, and win the pot.
+                  </p>
+                  <div style={{ fontSize: 12, marginTop: 6, color: live ? "#34D399" : "rgba(255,255,255,0.4)" }}>
+                    {live ? "● live rooms" : "○ demo rooms (backend offline)"} · {apiBase}
+                  </div>
+                </div>
+
+                {/* Card count selector */}
+                <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 12, margin: "28px 0" }}>
+                  <span style={{ color: "rgba(255,255,255,0.7)", fontFamily: F, fontWeight: 600 }}>Cards:</span>
+                  {[1, 2, 3, 4].map(n => (
+                    <button key={n} onClick={() => setNumCards(n)} style={{
+                      width: 46, height: 46, borderRadius: 12, fontFamily: F, fontWeight: 700, fontSize: 20, cursor: "pointer",
+                      background: numCards === n ? "white" : "rgba(255,255,255,0.1)", color: numCards === n ? "#6D28D9" : "white",
+                      border: numCards === n ? "3px solid #FBBF24" : "3px solid transparent",
+                    }}>{n}</button>
+                  ))}
+                  <span style={{ color: "rgba(255,255,255,0.45)", fontSize: 13 }}>+{numCards * 8}% odds</span>
+                </div>
+
+                {busy && (stage === "opening" || stage === "awaiting-signature" || stage === "pending") && (
+                  <div style={{ maxWidth: 520, margin: "0 auto 20px", padding: "14px 18px", borderRadius: 14, background: `${STAGE_META[stage].color}22`, border: `1px solid ${STAGE_META[stage].color}55`, textAlign: "center" }}>
+                    <div style={{ fontFamily: F, fontWeight: 700, fontSize: 15 }}>{STAGE_META[stage].icon} {STAGE_META[stage].label}…</div>
+                    <div style={{ display: "flex", gap: 6, justifyContent: "center", marginTop: 10 }}>
+                      {[1, 2, 3].map(s => (
+                        <div key={s} style={{ width: 60, height: 6, borderRadius: 3, background: s <= STAGE_STEP[stage] ? "#8B5CF6" : "rgba(255,255,255,0.15)" }} />
+                      ))}
+                    </div>
+                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginTop: 8 }}>
+                      {stage === "awaiting-signature" ? "check the FleetWallet popup" : "each step is a real on-chain transaction (~4s/block)"}
+                    </div>
+                  </div>
+                )}
+                {(stage === "insufficient" || stage === "failed") && err && (
+                  <div style={{ maxWidth: 520, margin: "0 auto 16px", padding: "12px 18px", borderRadius: 14, background: `${STAGE_META[stage].color}1a`, border: `1px solid ${STAGE_META[stage].color}55`, textAlign: "center" }}>
+                    <div style={{ fontFamily: F, fontWeight: 700, fontSize: 14, color: STAGE_META[stage].color }}>{STAGE_META[stage].icon} {STAGE_META[stage].label}</div>
+                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", marginTop: 4 }}>{err}</div>
+                  </div>
+                )}
+
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))", gap: 20 }}>
+                  {rooms.map((room, i) => {
+                    const c = ROOM_COLORS[i % ROOM_COLORS.length];
+                    return (
+                      <div key={room.id || room.name} style={{ borderRadius: 22, padding: 22, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", boxShadow: "0 10px 30px rgba(0,0,0,0.25)" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 16 }}>
+                          <div style={{ width: 58, height: 58, borderRadius: 16, background: `${c}22`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 30 }}>{room.emoji}</div>
+                          <div>
+                            <div style={{ fontFamily: F, fontWeight: 700, fontSize: 20 }}>{room.name}</div>
+                            <span style={{ padding: "2px 10px", borderRadius: 100, background: `${c}22`, color: c, fontWeight: 800, fontSize: 11 }}>{room.difficulty}</span>
+                          </div>
+                        </div>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 18 }}>
+                          <div><div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)" }}>Entry</div><div style={{ fontFamily: F, fontWeight: 700, fontSize: 18 }}>🪙 {room.entryFee}</div></div>
+                          <div style={{ textAlign: "right" }}><div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)" }}>Max prize</div><div style={{ fontFamily: F, fontWeight: 700, fontSize: 18, color: "#FBBF24" }}>🪙 {Number(room.advertisedPrize).toLocaleString()}</div></div>
+                        </div>
+                        <button onClick={() => play(room)} disabled={busy} style={{
+                          width: "100%", padding: "13px 0", borderRadius: 14, border: "none", cursor: busy ? "default" : "pointer",
+                          background: busy ? "rgba(255,255,255,0.15)" : `linear-gradient(135deg,${c},#8B5CF6)`, color: "white", fontFamily: F, fontWeight: 700, fontSize: 17,
+                        }}>{busy ? "Opening round…" : `Play ▶`}</button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </main>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );

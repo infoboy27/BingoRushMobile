@@ -65,6 +65,11 @@ export interface PlayerStats { address: string; gamesPlayed: number; wins: numbe
 export const getPlayerStats = (address: string) => jget<PlayerStats>(`/players/${address}/stats`);
 export const getPlayerHistory = (address: string) => jget<RoundHistoryEntry[]>(`/players/${address}/history`);
 
+export type LeaderboardPeriod = "daily" | "weekly" | "monthly" | "alltime";
+export interface LeaderboardEntry { address: string; gamesPlayed: number; wins: number; totalWon: number; }
+export const getLeaderboard = (period: LeaderboardPeriod = "alltime", limit = 50) =>
+  jget<LeaderboardEntry[]>(`/leaderboard?period=${period}&limit=${limit}`);
+
 export interface CosmeticItem {
   id: string; name: string; emoji: string; priceGems: number;
   effect: string | null; badge: string | null;
