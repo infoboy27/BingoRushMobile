@@ -61,6 +61,10 @@ export interface WalletInfo {
 }
 export const getWallet = (address: string) => jget<WalletInfo>(`/players/${address}/wallet`);
 
+export interface PlayerStats { address: string; gamesPlayed: number; wins: number; totalWon: number; }
+export const getPlayerStats = (address: string) => jget<PlayerStats>(`/players/${address}/stats`);
+export const getPlayerHistory = (address: string) => jget<RoundHistoryEntry[]>(`/players/${address}/history`);
+
 export interface CosmeticItem {
   id: string; name: string; emoji: string; priceGems: number;
   effect: string | null; badge: string | null;
