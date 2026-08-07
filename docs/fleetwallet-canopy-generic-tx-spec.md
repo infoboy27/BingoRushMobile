@@ -29,8 +29,8 @@ const res = await window.fleet.request({
       { number: 4, type: "uint64", value: 100000000 }     // amount (uCNPY)
     ],
     // --- where + how ---
-    rpcUrl:    "https://bingo.val-a.grad.dev.app.canopynetwork.org/rpc",
-    chainId:   405,
+    rpcUrl:    "https://casino.val-a.grad.dev.app.canopynetwork.org/rpc",
+    chainId:   406,
     networkId: 1,
     fee:       10000,
     // --- human approval (shown alongside the decoded fields) ---
@@ -110,7 +110,7 @@ No wallet change — same method, different fields + display.
 ## Network (Bingo, today)
 
 Add in FleetWallet → **Custom networks** (family Canopy):
-`Bingo · canopy · 405 · https://bingo.val-a.grad.dev.app.canopynetwork.org/rpc`,
+`Bingo · canopy · 406 · https://casino.val-a.grad.dev.app.canopynetwork.org/rpc`,
 Network ID `1`. (Our RPC already returns permissive CORS, so the extension can
 reach it directly.)
 

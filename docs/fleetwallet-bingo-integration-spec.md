@@ -7,15 +7,15 @@ account, and submits it to the round's Canopy RPC.
 
 This is grounded in FleetWallet's existing `canoliq_deposit` implementation —
 `bingo_join` mirrors it exactly, with two differences: (1) a different plugin
-message, and (2) it submits to a **per-round `rpcUrl`** (Bingo is chainId **405**,
+message, and (2) it submits to a **per-round `rpcUrl`** (Bingo is chainId **406**,
 which may differ from the wallet's active env).
 
 ## Network (graduated Bingo chain)
 
 | | |
 |---|---|
-| RPC | `https://bingo.val-a.grad.dev.app.canopynetwork.org/rpc` |
-| chainId | **405** · networkId **1** · CNPY / 6 decimals · fee 10000 uCNPY |
+| RPC | `https://casino.val-a.grad.dev.app.canopynetwork.org/rpc` |
+| chainId | **406** · networkId **1** · CNPY / 6 decimals · fee 10000 uCNPY |
 
 The dApp passes `rpcUrl`, `chainId`, `networkId` per round (from the game
 server's `GET /rounds/{id}/info`), so the wallet doesn't need to be pinned to
@@ -59,7 +59,7 @@ for **registered** messages (send/stake) because the node re-encodes the json
 canonically. **`join_room` is a plugin message** — the node cannot re-derive the
 exact signed bytes from json, so the signature won't verify. Submit the **exact
 signed bytes** instead (this is the proven path — the Bingo game server's Python
-bridge uses it against chainId 405):
+bridge uses it against chainId 406):
 
 ```jsonc
 POST {rpcUrl}/v1/tx
@@ -69,7 +69,7 @@ POST {rpcUrl}/v1/tx
   "msgBytes":   "<hex of encodeMessageJoinRoom(...)>",
   "signature": { "publicKey": "<48b hex>", "signature": "<96b hex>" },
   "time": <micros>, "createdHeight": <height>, "fee": 10000,
-  "memo": "", "networkID": 1, "chainID": 405
+  "memo": "", "networkID": 1, "chainID": 406
 }
 ```
 The signature is over `signBytes = encodeTransaction(baseTx with signature=nil)`
@@ -128,9 +128,9 @@ Flow: server opens the round → `bingo_join` (player signs) → `GET …/card` 
 | # | File | What | Testable by |
 |---|---|---|---|
 | 1 | canopy-tx.js | `encodeMessageJoinRoom` | Node (bytes == Python proto) |
-| 2 | canopy.js | `bingoJoin` (submit via msgTypeUrl/msgBytes) | Node (submit to chainId 405) |
+| 2 | canopy.js | `bingoJoin` (submit via msgTypeUrl/msgBytes) | Node (submit to chainId 406) |
 | 3 | service-worker.js | `bingo_join` route + `rpcBingoJoin` | extension load |
 | 4 | popup.js | `bingo-join` approval screen | **browser QA** |
 
-Items 1–2 can be proven in Node against the live graduated chain (405) before
+Items 1–2 can be proven in Node against the live graduated chain (406) before
 shipping; item 4 needs the extension's normal browser QA.
