@@ -4,13 +4,13 @@ Plain answers to the "how do I actually make money / what is the token" question
 
 ## 1. What is the token? (BINGO vs CNPY)
 
-The graduated Bingo chain (**chainId 405**) has its **own native token** — its own
+The graduated Bingo chain (**chainId 406**) has its **own native token** — its own
 supply (~100M, emitting 50/block), separate from the root chain's token. So a
-"Bingo token" already exists: it's the native token of chain 405.
+"Bingo token" already exists: it's the native token of chain 406.
 
 - It currently shows the **generic symbol "CNPY"** in tooling/wallets (no custom
   ticker was set), and it is **not tradeable yet** (no exchange/DEX, no market price).
-- Branding it **"$BINGO"** = giving that existing 405 token a **ticker + market
+- Branding it **"$BINGO"** = giving that existing 406 token a **ticker + market
   (liquidity)** — not creating a new coin. The symbol shown in a wallet is a
   client display convention; a public ticker + a DEX/listing is what makes it
   real and swappable.
@@ -29,7 +29,7 @@ Owner withdraws the treasury                     →  transfer / swap to stablec
 ```
 
 The player never touches the token mechanics. Two revenue rails:
-- **On-chain rake** — accrues in the 405 token (see §4). Realized as fiat once the
+- **On-chain rake** — accrues in the 406 token (see §4). Realized as fiat once the
   token has market liquidity, or by running coins on a stable peg (§3).
 - **Off-chain IAP** — buying coin/gem bundles with real money goes to your
   **payment processor** (Stripe/etc.) → **direct fiat**, independent of the token.
@@ -55,7 +55,7 @@ $4 next week). Instead:
   (Desktop) for the address + key.
 - **Withdraw** = sign a transfer from the treasury to any address (your wallet,
   an exchange, swap to a stablecoin), whenever you want — monthly, quarterly, etc.
-- ⚠️ For the graduated chain (405) to credit the treasury, its node must
+- ⚠️ For the graduated chain (406) to credit the treasury, its node must
   auto-update to plugin **v0.2.0** (pluginAutoUpdate → infoboy27/canopy). Until
   then the rake still goes to the chain fee pool.
 
@@ -63,6 +63,6 @@ $4 next week). Instead:
 
 1. Route rake → treasury  ✅ (v0.2.0)
 2. Coins on a stable peg + fiat IAP (Stripe) → immediate fiat revenue.
-3. Give the 405 token a ticker + DEX liquidity → treasury (token) swappable to a
+3. Give the 406 token a ticker + DEX liquidity → treasury (token) swappable to a
    stablecoin → off-ramp to fiat.
 4. Licensing/KYC where required (real-money play is regulated gambling).

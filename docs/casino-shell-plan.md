@@ -2,7 +2,7 @@
 
 Objetivo: convertir el mockup "Bingo Rush Web3 Game" (artifact analizado 2026-07-28) en el
 frontend REAL de la plataforma, conectado 100% a lo que ya tenemos construido y probado en
-la chain graduada (405). Poker/Domino/Pool/Roulette quedan como tiles "Coming Soon" — cero
+la chain graduada (406). Poker/Domino/Pool/Roulette quedan como tiles "Coming Soon" — cero
 trabajo de backend en esta fase. Ver contexto completo en `docs/economy-and-token.md` y
 `chain/deploy/graduated-chain.md`.
 
@@ -74,7 +74,7 @@ Todo lo de abajo es frontend + una capa delgada nueva de persistencia en el game
   en vez de reescribirlos.
 
 ### 10. QA end-to-end + deploy
-- Probar en `bingoapp.jfmcss.com` contra la chain 405: connect wallet → join real → chat →
+- Probar en `bingoapp.jfmcss.com` contra la chain 406: connect wallet → join real → chat →
   ready-up → juego → call bingo → result → wallet page muestra el historial correcto →
   leaderboard refleja la partida.
 - Redeploy `ui-dist` (nginx) + `bingo-gameserver` (nueva imagen con SQLite).

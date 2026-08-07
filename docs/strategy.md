@@ -17,7 +17,7 @@ mostly a new rules engine on top of the same rails.
 
 ## 2. What already exists (not slideware — running)
 
-- **Its own blockchain**: Bingo graduated as a Canopy nested chain (chainId 405);
+- **Its own blockchain**: Bingo graduated as a Canopy nested chain (chainId 406);
   the node runs our custom **Python plugin** (the on-chain logic).
 - **On-chain primitives** (in the plugin): room **escrow** (open/join/settle),
   **provably-fair RNG** via commit-reveal (the chain re-verifies the winner
