@@ -567,11 +567,21 @@ export default function DesktopApp() {
   const [skinsOpen, setSkinsOpen] = useState(false);
   const [walletOpen, setWalletOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [view, setView] = useState<ShellView>("home");
+  const SHELL_VIEWS: ShellView[] = ["home", "games", "rooms", "leaderboard"];
+  const [view, setView] = useState<ShellView>(() => {
+    // There's no URL routing for these sections (Home/Games/Rooms/Leaderboard
+    // are plain React state) — without this, any refresh silently drops the
+    // player back on Home, discarding their place. sessionStorage survives a
+    // reload without introducing new routes the static nginx deploy would
+    // need an SPA fallback for.
+    const saved = typeof sessionStorage !== "undefined" ? sessionStorage.getItem("brView") : null;
+    return (SHELL_VIEWS as string[]).includes(saved || "") ? (saved as ShellView) : "home";
+  });
   const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => { getRooms().then(r => { if (r?.length) { setRooms(r); setLive(true); } }).catch(() => {}); }, []);
   useEffect(() => () => wsRef.current?.close(), []);
+  useEffect(() => { sessionStorage.setItem("brView", view); }, [view]);
 
   function failStage(e: any) {
     setStage(/insufficient/i.test(String(e?.message)) ? "insufficient" : "failed");
