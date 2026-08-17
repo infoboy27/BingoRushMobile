@@ -1121,21 +1121,13 @@ function LiveScreen({ go }: { go: (s: Screen) => void }) {
   );
 }
 
-// ─── Navigation & App shell ───────────────────────────────────────────────────
-const NAV: { id: Screen; label: string; emoji: string }[] = [
-  { id: "splash",  label: "Splash",  emoji: "✨" },
-  { id: "home",    label: "Home",    emoji: "🏠" },
-  { id: "lobby",   label: "Lobby",   emoji: "🎲" },
-  { id: "cards",   label: "Cards",   emoji: "🃏" },
-  { id: "game",    label: "Game",    emoji: "🎯" },
-  { id: "win",     label: "Win",     emoji: "🏆" },
-  { id: "lose",    label: "Lose",    emoji: "😅" },
-  { id: "shop",    label: "Shop",    emoji: "🛒" },
-  { id: "profile", label: "Profile", emoji: "👤" },
-  { id: "daily",   label: "Daily",   emoji: "🎁" },
-  { id: "live",    label: "Live",    emoji: "⛓️" },
-];
-
+// ─── App shell ────────────────────────────────────────────────────────────────
+// Real mobile entry point. This used to wrap the screens in a fixed-size
+// "iPhone 15" frame with a pill picker to jump between all 10 screens — a
+// leftover from the original Figma design-review prototype. Every phone
+// visitor (i.e. most real traffic) was landing on that picker instead of the
+// game. The screens themselves are the real, backend-wired flow; only the
+// design-review chrome around them gets removed here.
 export default function App() {
   const [screen, setScreen] = useState<Screen>("splash");
   const [sess, setSess] = useState<Session>(DEFAULT_SESSION);
@@ -1164,62 +1156,18 @@ export default function App() {
         * { scrollbar-width: none; }
       `}</style>
 
-      <div style={{
-        minHeight: "100dvh", display: "flex", flexDirection: "column",
-        alignItems: "center", justifyContent: "flex-start",
-        padding: "24px 16px 32px",
-        background: "linear-gradient(135deg,#0F0A2E 0%,#1E1B4B 45%,#2D1B69 100%)",
-        gap: 16, overflowX: "hidden",
-      }}>
-        {/* Header */}
-        <div style={{ textAlign: "center" }}>
-          <h1 style={{ fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 26, color: "white", lineHeight: 1.15, margin: 0, letterSpacing: -0.5 }}>🎱 Bingo Rush</h1>
-          <p style={{ fontFamily: "Nunito, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.38)", marginTop: 3 }}>Mobile UI Concept · 10 Screens</p>
-        </div>
-
-        {/* Screen navigator */}
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, justifyContent: "center", maxWidth: 480 }}>
-          {NAV.map(s => (
-            <button key={s.id} onClick={() => setScreen(s.id)} style={{
-              padding: "5px 13px", borderRadius: 100,
-              fontFamily: "Nunito, sans-serif", fontSize: 12, fontWeight: 800,
-              background: screen === s.id ? "#FBBF24" : "rgba(255,255,255,0.08)",
-              color: screen === s.id ? "#1A0A2E" : "rgba(255,255,255,0.58)",
-              border: "none", cursor: "pointer",
-              boxShadow: screen === s.id ? "0 3px 14px #FBBF2458" : "none",
-              transition: "all 0.18s",
-            }}>
-              {s.emoji} {s.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Phone frame */}
-        <div style={{
-          width: 390, height: 844, borderRadius: 50, overflow: "hidden",
-          position: "relative", background: "#1E1B4B", flexShrink: 0,
-          boxShadow: "0 40px 80px rgba(0,0,0,0.85), 0 0 0 8px rgba(255,255,255,0.055), 0 0 0 9px rgba(255,255,255,0.022)",
-          border: "1px solid rgba(255,255,255,0.13)",
-        }}>
-          {/* Dynamic Island */}
-          <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: 126, height: 34, background: "#080810", borderRadius: "0 0 24px 24px", zIndex: 200 }} />
-
-          {screen === "splash"  && <SplashScreen  go={setScreen} />}
-          {screen === "home"    && <HomeScreen    go={setScreen} />}
-          {screen === "lobby"   && <LobbyScreen   go={setScreen} setSess={setSess} />}
-          {screen === "cards"   && <CardsScreen   go={setScreen} sess={sess} setSess={setSess} />}
-          {screen === "game"    && <GameScreen    go={setScreen} sess={sess} setSess={setSess} />}
-          {screen === "win"     && <WinScreen     go={setScreen} sess={sess} />}
-          {screen === "lose"    && <LoseScreen    go={setScreen} />}
-          {screen === "shop"    && <ShopScreen    go={setScreen} />}
-          {screen === "profile" && <ProfileScreen go={setScreen} />}
-          {screen === "daily"   && <DailyScreen   go={setScreen} />}
-          {screen === "live"    && <LiveScreen    go={setScreen} />}
-        </div>
-
-        <p style={{ fontFamily: "Nunito, sans-serif", fontSize: 11, color: "rgba(255,255,255,0.22)", textAlign: "center", maxWidth: 340 }}>
-          iPhone 15 · 390 × 844 · Tap buttons inside the phone to navigate · Use the pills above to jump to any screen
-        </p>
+      <div style={{ position: "relative", minHeight: "100dvh", width: "100%", background: "#1E1B4B", overflow: "hidden" }}>
+        {screen === "splash"  && <SplashScreen  go={setScreen} />}
+        {screen === "home"    && <HomeScreen    go={setScreen} />}
+        {screen === "lobby"   && <LobbyScreen   go={setScreen} setSess={setSess} />}
+        {screen === "cards"   && <CardsScreen   go={setScreen} sess={sess} setSess={setSess} />}
+        {screen === "game"    && <GameScreen    go={setScreen} sess={sess} setSess={setSess} />}
+        {screen === "win"     && <WinScreen     go={setScreen} sess={sess} />}
+        {screen === "lose"    && <LoseScreen    go={setScreen} />}
+        {screen === "shop"    && <ShopScreen    go={setScreen} />}
+        {screen === "profile" && <ProfileScreen go={setScreen} />}
+        {screen === "daily"   && <DailyScreen   go={setScreen} />}
+        {screen === "live"    && <LiveScreen    go={setScreen} />}
       </div>
     </>
   );
