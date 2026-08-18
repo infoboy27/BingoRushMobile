@@ -130,7 +130,7 @@ function SplashScreen({ go }: { go: (s: Screen) => void }) {
   ] as const;
 
   return (
-    <PhoneScreen bg="linear-gradient(155deg,#4C1D95 0%,#1E1B4B 55%,#0F172A 100%)">
+    <PhoneScreen bg="radial-gradient(ellipse 600px 500px at 50% 20%, rgba(109,40,217,0.28), transparent 70%), #0A0B14">
       <StatusBar />
       {/* Decorative floating balls */}
       {balls.map((b, idx) => {
@@ -156,10 +156,10 @@ function SplashScreen({ go }: { go: (s: Screen) => void }) {
         {/* Logo */}
         <div style={{
           width: 124, height: 124, borderRadius: 36,
-          background: "linear-gradient(140deg,#D4AF6A 0%,#D4AF6A 60%,#D97706 100%)",
+          background: "linear-gradient(140deg,#E6C687 0%,#D4AF6A 60%,#B8934F 100%)",
           display: "flex", alignItems: "center", justifyContent: "center",
           fontSize: 64, marginBottom: 24,
-          boxShadow: "0 0 80px #D4AF6A75, 0 20px 56px rgba(0,0,0,0.45)",
+          boxShadow: "0 0 80px rgba(212,175,106,0.45), 0 20px 56px rgba(0,0,0,0.45)",
           border: "4px solid rgba(255,255,255,0.28)",
           animation: "pulse 3s ease-in-out infinite",
         }}>🎱</div>
@@ -183,10 +183,10 @@ function SplashScreen({ go }: { go: (s: Screen) => void }) {
         <p style={{ fontFamily: "General Sans, sans-serif", color: "rgba(255,255,255,0.38)", fontSize: 13, marginBottom: 52 }}>Loading your game…</p>
         <button onClick={() => go("home")} style={{
           padding: "18px 56px", borderRadius: 100,
-          background: "linear-gradient(135deg,#D4AF6A 0%,#D4AF6A 100%)",
+          background: "linear-gradient(135deg,#E6C687 0%,#D4AF6A 100%)",
           color: "#1A0A2E", fontFamily: "Fraunces, serif",
           fontWeight: 700, fontSize: 22, border: "none", cursor: "pointer",
-          boxShadow: "0 8px 36px #D4AF6A60, 0 2px 0 #D97706",
+          boxShadow: "0 8px 36px rgba(212,175,106,0.4), 0 2px 0 #B8934F",
           letterSpacing: 0.3,
         }}>▶  Tap to Play</button>
       </div>
@@ -203,7 +203,7 @@ function HomeScreen({ go }: { go: (s: Screen) => void }) {
     { e: "👤", l: "Profile",      bg: "linear-gradient(135deg,#EC4899,#BE185D)", s: "profile"},
   ];
   return (
-    <PhoneScreen bg="linear-gradient(180deg,#5B21B6 0%,#7C3AED 36%,#EDE9FE 100%)">
+    <PhoneScreen bg="radial-gradient(ellipse 500px 400px at 50% 0%, rgba(109,40,217,0.24), transparent 65%), #0A0B14">
       <StatusBar />
       {/* Top bar */}
       <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "4px 16px 12px" }}>
@@ -222,7 +222,7 @@ function HomeScreen({ go }: { go: (s: Screen) => void }) {
       </div>
 
       {/* Weekend Jackpot banner */}
-      <div style={{ margin: "0 16px 14px", padding: "14px 16px", borderRadius: 24, background: "linear-gradient(135deg,#D4AF6A,#D4AF6A)", boxShadow: "0 8px 30px #D4AF6A55", display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}>
+      <div style={{ margin: "0 16px 14px", padding: "14px 16px", borderRadius: 24, background: "linear-gradient(135deg,#E6C687,#D4AF6A)", boxShadow: "0 8px 30px rgba(212,175,106,0.35)", display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}>
         <span style={{ fontSize: 34 }}>🏆</span>
         <div style={{ flex: 1 }}>
           <div style={{ fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 17, color: "#1A0A2E" }}>Weekend Jackpot</div>
@@ -250,15 +250,15 @@ function HomeScreen({ go }: { go: (s: Screen) => void }) {
       </div>
 
       {/* Stats strip */}
-      <div style={{ margin: "0 16px", padding: "14px 20px", borderRadius: 24, background: "white", boxShadow: "0 4px 20px rgba(0,0,0,0.06)", display: "flex", justifyContent: "space-around" }}>
+      <div style={{ margin: "0 16px", padding: "14px 20px", borderRadius: 24, background: "#14151F", border: "1px solid rgba(255,255,255,0.08)", display: "flex", justifyContent: "space-around" }}>
         {[
           { l: "Wins",   v: "847",  e: "🏆" },
           { l: "Streak", v: "7 🔥", e: ""   },
           { l: "Rank",   v: "#142", e: "⭐" },
         ].map(s => (
           <div key={s.l} style={{ textAlign: "center" }}>
-            <div style={{ fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 20, color: "#4C1D95" }}>{s.v}</div>
-            <div style={{ fontFamily: "General Sans, sans-serif", fontSize: 12, color: "#6B7280" }}>{s.l}</div>
+            <div style={{ fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 20, color: "#D4AF6A" }}>{s.v}</div>
+            <div style={{ fontFamily: "General Sans, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.5)" }}>{s.l}</div>
           </div>
         ))}
       </div>
@@ -295,7 +295,7 @@ function LobbyScreen({ go, setSess }: { go: (s: Screen) => void; setSess: (s: Se
   };
 
   return (
-    <PhoneScreen bg="linear-gradient(180deg,#4C1D95 0%,#F5F3FF 36%)">
+    <PhoneScreen bg="radial-gradient(ellipse 500px 400px at 50% 0%, rgba(109,40,217,0.2), transparent 65%), #0A0B14">
       <StatusBar />
       <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "4px 16px 14px" }}>
         <BackBtn onClick={() => go("home")} />
@@ -306,7 +306,7 @@ function LobbyScreen({ go, setSess }: { go: (s: Screen) => void; setSess: (s: Se
       {/* Filter tabs */}
       <div style={{ display: "flex", gap: 8, padding: "0 16px 14px" }}>
         {tabs.map((t, i) => (
-          <button key={t} onClick={() => setTab(i)} style={{ flex: 1, padding: "8px 0", borderRadius: 100, fontFamily: "Fraunces, serif", fontSize: 13, fontWeight: 700, background: tab === i ? "white" : "rgba(255,255,255,0.15)", color: tab === i ? "#4C1D95" : "white", border: "none", cursor: "pointer" }}>{t}</button>
+          <button key={t} onClick={() => setTab(i)} style={{ flex: 1, padding: "8px 0", borderRadius: 100, fontFamily: "Fraunces, serif", fontSize: 13, fontWeight: 700, background: tab === i ? "rgba(212,175,106,0.16)" : "rgba(255,255,255,0.06)", color: tab === i ? "#E6C687" : "rgba(255,255,255,0.7)", border: tab === i ? "1px solid rgba(212,175,106,0.3)" : "1px solid transparent", cursor: "pointer" }}>{t}</button>
         ))}
       </div>
 
@@ -320,14 +320,14 @@ function LobbyScreen({ go, setSess }: { go: (s: Screen) => void; setSess: (s: Se
           const c = ROOM_COLORS[idx % ROOM_COLORS.length];
           const prize = Number(room.advertisedPrize || 0).toLocaleString();
           return (
-          <div key={room.id || room.name} style={{ borderRadius: 28, padding: 16, background: "white", boxShadow: "0 4px 22px rgba(0,0,0,0.07)" }}>
+          <div key={room.id || room.name} style={{ borderRadius: 20, padding: 16, background: "#14151F", border: "1px solid rgba(255,255,255,0.08)" }}>
             <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 12 }}>
               <div style={{ width: 52, height: 52, borderRadius: 16, background: `${c}18`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, flexShrink: 0 }}>{room.emoji}</div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 18, color: "#1A0A2E" }}>{room.name}</div>
+                <div style={{ fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 18, color: "white" }}>{room.name}</div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
                   <span style={{ padding: "2px 8px", borderRadius: 100, background: `${c}18`, color: c, fontFamily: "General Sans, sans-serif", fontWeight: 800, fontSize: 11 }}>{room.difficulty}</span>
-                  <span style={{ fontFamily: "General Sans, sans-serif", fontSize: 12, color: "#6B7280" }}>👥 {room.capacity} max</span>
+                  <span style={{ fontFamily: "General Sans, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.45)" }}>👥 {room.capacity} max</span>
                 </div>
               </div>
             </div>
@@ -335,8 +335,8 @@ function LobbyScreen({ go, setSess }: { go: (s: Screen) => void; setSess: (s: Se
               <div style={{ display: "flex", gap: 20 }}>
                 {[{ label: "Entry", val: `🪙 ${room.entryFee}` }, { label: "Max Prize", val: `🪙 ${prize}` }].map(x => (
                   <div key={x.label}>
-                    <div style={{ fontFamily: "General Sans, sans-serif", fontSize: 11, color: "#9CA3AF" }}>{x.label}</div>
-                    <div style={{ fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 15, color: "#374151" }}>{x.val}</div>
+                    <div style={{ fontFamily: "General Sans, sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)" }}>{x.label}</div>
+                    <div style={{ fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 15, color: "#D4AF6A" }}>{x.val}</div>
                   </div>
                 ))}
               </div>
@@ -399,7 +399,7 @@ function CardsScreen({ go, sess, setSess }: { go: (s: Screen) => void; sess: Ses
   );
 
   return (
-    <PhoneScreen bg="linear-gradient(180deg,#5B21B6 0%,#EDE9FE 36%)">
+    <PhoneScreen bg="radial-gradient(ellipse 500px 400px at 50% 0%, rgba(109,40,217,0.2), transparent 65%), #0A0B14">
       <StatusBar />
       <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "4px 16px 14px" }}>
         <BackBtn onClick={() => go("lobby")} />
@@ -409,7 +409,7 @@ function CardsScreen({ go, sess, setSess }: { go: (s: Screen) => void; sess: Ses
       {/* Card count selector */}
       <div style={{ display: "flex", gap: 10, padding: "0 16px 20px" }}>
         {[1, 2, 3, 4].map(n => (
-          <button key={n} onClick={() => setSel(n)} style={{ flex: 1, padding: "12px 0", borderRadius: 18, fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 22, background: sel === n ? "white" : "rgba(255,255,255,0.15)", color: sel === n ? "#7C3AED" : "white", border: sel === n ? "3px solid #D4AF6A" : "3px solid transparent", cursor: "pointer", boxShadow: sel === n ? "0 4px 18px rgba(0,0,0,0.12)" : "none" }}>{n}</button>
+          <button key={n} onClick={() => setSel(n)} style={{ flex: 1, padding: "12px 0", borderRadius: 18, fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 22, background: sel === n ? "rgba(212,175,106,0.16)" : "rgba(255,255,255,0.06)", color: sel === n ? "#E6C687" : "white", border: sel === n ? "3px solid #D4AF6A" : "3px solid transparent", cursor: "pointer" }}>{n}</button>
         ))}
       </div>
 
@@ -434,14 +434,14 @@ function CardsScreen({ go, sess, setSess }: { go: (s: Screen) => void; sess: Ses
       </div>
 
       {/* Cost / reward info */}
-      <div style={{ margin: "0 16px 14px", padding: "16px 20px", borderRadius: 24, background: "white", boxShadow: "0 4px 20px rgba(0,0,0,0.07)", display: "flex", justifyContent: "space-around" }}>
+      <div style={{ margin: "0 16px 14px", padding: "16px 20px", borderRadius: 20, background: "#14151F", border: "1px solid rgba(255,255,255,0.08)", display: "flex", justifyContent: "space-around" }}>
         {[
-          { label: "Entry Cost",  val: `🪙 ${costs[sel - 1]}`,   color: "#4C1D95" },
-          { label: "Max Win",     val: `🪙 ${rewards[sel - 1]}`, color: "#10B981" },
+          { label: "Entry Cost",  val: `🪙 ${costs[sel - 1]}`,   color: "#D4AF6A" },
+          { label: "Max Win",     val: `🪙 ${rewards[sel - 1]}`, color: "#3FAE7B" },
           { label: "Odds Boost",  val: `+${sel * 8}%`,            color: "#D4AF6A" },
         ].map((x, i, arr) => (
-          <div key={x.label} style={{ textAlign: "center", ...(i < arr.length - 1 ? { paddingRight: 16, borderRight: "1px solid #F3F4F6" } : {}) }}>
-            <div style={{ fontFamily: "General Sans, sans-serif", fontSize: 11, color: "#9CA3AF", marginBottom: 4 }}>{x.label}</div>
+          <div key={x.label} style={{ textAlign: "center", ...(i < arr.length - 1 ? { paddingRight: 16, borderRight: "1px solid rgba(255,255,255,0.08)" } : {}) }}>
+            <div style={{ fontFamily: "General Sans, sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 4 }}>{x.label}</div>
             <div style={{ fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 20, color: x.color }}>{x.val}</div>
           </div>
         ))}
@@ -508,7 +508,7 @@ function GameScreen({ go, sess, setSess }: { go: (s: Screen) => void; sess: Sess
     : [{ e: "👥", v: "12 left" }, { e: "🏆", v: "2,500" }, { e: "⏱️", v: "1:47" }];
 
   return (
-    <PhoneScreen bg="linear-gradient(180deg,#1E1B4B 0%,#2D1B69 100%)">
+    <PhoneScreen bg="radial-gradient(ellipse 500px 400px at 50% 0%, rgba(109,40,217,0.18), transparent 70%), #0A0B14">
       <StatusBar />
       {/* Header row */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "2px 12px 8px" }}>
@@ -586,7 +586,7 @@ function GameScreen({ go, sess, setSess }: { go: (s: Screen) => void; sess: Sess
             ⛓️ {statusMsg || "Auto-marked & settled on-chain"}
           </div>
         ) : (
-          <button onClick={() => go("win")} style={{ width: "100%", padding: "13px 0", borderRadius: 20, background: "linear-gradient(135deg,#D4AF6A,#D4AF6A)", fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 22, color: "#1A0A2E", border: "none", cursor: "pointer", boxShadow: "0 4px 22px #D4AF6A58" }}>
+          <button onClick={() => go("win")} style={{ width: "100%", padding: "13px 0", borderRadius: 20, background: "linear-gradient(135deg,#E6C687,#D4AF6A)", fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 22, color: "#1A0A2E", border: "none", cursor: "pointer", boxShadow: "0 4px 22px rgba(212,175,106,0.35)" }}>
             🎉  BINGO!
           </button>
         )}
@@ -612,7 +612,7 @@ function GameScreen({ go, sess, setSess }: { go: (s: Screen) => void; sess: Sess
 function WinScreen({ go, sess }: { go: (s: Screen) => void; sess: Session }) {
   const won = sess.wonCoins;
   return (
-    <PhoneScreen bg="linear-gradient(155deg,#1E1B4B 0%,#4C1D95 50%,#7C3AED 100%)">
+    <PhoneScreen bg="radial-gradient(ellipse 600px 500px at 50% 20%, rgba(212,175,106,0.25), transparent 70%), #0A0B14">
       <StatusBar />
       {CONFETTI.map((p, i) => (
         <div key={i} style={{
@@ -646,7 +646,7 @@ function WinScreen({ go, sess }: { go: (s: Screen) => void; sess: Session }) {
           ))}
         </div>
 
-        <button onClick={() => go("lobby")} style={{ width: "100%", padding: "16px 0", borderRadius: 22, background: "linear-gradient(135deg,#D4AF6A,#D4AF6A)", fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 22, color: "#1A0A2E", border: "none", cursor: "pointer", boxShadow: "0 8px 36px #D4AF6A58", marginBottom: 10 }}>
+        <button onClick={() => go("lobby")} style={{ width: "100%", padding: "16px 0", borderRadius: 22, background: "linear-gradient(135deg,#E6C687,#D4AF6A)", fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 22, color: "#1A0A2E", border: "none", cursor: "pointer", boxShadow: "0 8px 36px rgba(212,175,106,0.35)", marginBottom: 10 }}>
           Play Again 🎱
         </button>
         <button onClick={() => go("home")} style={{ width: "100%", padding: "14px 0", borderRadius: 22, background: "rgba(255,255,255,0.08)", fontFamily: "Fraunces, serif", fontWeight: 600, fontSize: 18, color: "white", border: "2px solid rgba(255,255,255,0.16)", cursor: "pointer" }}>
@@ -661,7 +661,7 @@ function WinScreen({ go, sess }: { go: (s: Screen) => void; sess: Session }) {
 // ─── 7. Lose ──────────────────────────────────────────────────────────────────
 function LoseScreen({ go }: { go: (s: Screen) => void }) {
   return (
-    <PhoneScreen bg="linear-gradient(160deg,#1F2937 0%,#374151 55%,#4B5563 100%)">
+    <PhoneScreen bg="linear-gradient(160deg,#0A0B14 0%,#14151F 60%,#1B1C29 100%)">
       <StatusBar />
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "56px 24px 0" }}>
         <span style={{ fontSize: 72, marginBottom: 16 }}>😅</span>
@@ -748,7 +748,7 @@ function ShopScreen({ go }: { go: (s: Screen) => void }) {
   const badgeCol = (b: string | null) => ({ "BEST VALUE": "#10B981", "RARE": "#8B5CF6", "NEW": "#3B82F6" }[b ?? ""] ?? "#EC4899");
 
   return (
-    <PhoneScreen bg="linear-gradient(180deg,#0F172A 0%,#F8F7FF 28%)">
+    <PhoneScreen bg="radial-gradient(ellipse 500px 400px at 50% 0%, rgba(109,40,217,0.2), transparent 65%), #0A0B14">
       <StatusBar />
       <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 14px 12px" }}>
         <BackBtn onClick={() => go("home")} />
@@ -758,7 +758,7 @@ function ShopScreen({ go }: { go: (s: Screen) => void }) {
       </div>
 
       {/* Flash sale banner */}
-      <div style={{ margin: "0 14px 12px", padding: "14px 16px", borderRadius: 24, background: "linear-gradient(135deg,#D4AF6A,#D4AF6A 50%,#EC4899)", boxShadow: "0 8px 32px #D4AF6A40" }}>
+      <div style={{ margin: "0 14px 12px", padding: "14px 16px", borderRadius: 24, background: "linear-gradient(135deg,#E6C687,#D4AF6A 60%,#EC4899)", boxShadow: "0 8px 32px rgba(212,175,106,0.3)" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div>
             <div style={{ fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 20, color: "#1A0A2E" }}>🔥 Flash Sale!</div>
@@ -772,20 +772,20 @@ function ShopScreen({ go }: { go: (s: Screen) => void }) {
       {/* Tabs */}
       <div style={{ display: "flex", gap: 8, padding: "0 14px 12px" }}>
         {tabs.map((t, i) => (
-          <button key={t} onClick={() => setTab(i)} style={{ flex: 1, padding: "8px 0", borderRadius: 100, fontFamily: "Fraunces, serif", fontSize: 13, fontWeight: 700, background: tab === i ? "#7C3AED" : "#F0ECF8", color: tab === i ? "white" : "#4B5563", border: "none", cursor: "pointer" }}>{t}</button>
+          <button key={t} onClick={() => setTab(i)} style={{ flex: 1, padding: "8px 0", borderRadius: 100, fontFamily: "Fraunces, serif", fontSize: 13, fontWeight: 700, background: tab === i ? "rgba(212,175,106,0.16)" : "rgba(255,255,255,0.06)", color: tab === i ? "#E6C687" : "rgba(255,255,255,0.6)", border: tab === i ? "1px solid rgba(212,175,106,0.3)" : "1px solid transparent", cursor: "pointer" }}>{t}</button>
         ))}
       </div>
 
       {/* Product grid */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, padding: "0 14px 24px" }}>
         {items[tab].map(item => (
-          <div key={item.n} style={{ borderRadius: 22, padding: "16px 14px", background: "white", boxShadow: "0 2px 14px rgba(0,0,0,0.06)", position: "relative" }}>
+          <div key={item.n} style={{ borderRadius: 18, padding: "16px 14px", background: "#14151F", border: "1px solid rgba(255,255,255,0.08)", position: "relative" }}>
             {item.b && (
               <div style={{ position: "absolute", top: -9, right: 10, padding: "2px 8px", borderRadius: 100, background: badgeCol(item.b), color: "white", fontFamily: "General Sans, sans-serif", fontWeight: 900, fontSize: 9 }}>{item.b}</div>
             )}
             <span style={{ fontSize: 36, display: "block", marginBottom: 8 }}>{item.e}</span>
-            <div style={{ fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 15, color: "#1A0A2E", marginBottom: 2 }}>{item.n}</div>
-            <div style={{ fontFamily: "General Sans, sans-serif", fontSize: 11, color: "#9CA3AF", marginBottom: 12 }}>{item.a}</div>
+            <div style={{ fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 15, color: "white", marginBottom: 2 }}>{item.n}</div>
+            <div style={{ fontFamily: "General Sans, sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 12 }}>{item.a}</div>
             <button style={{ width: "100%", padding: "8px 0", borderRadius: 14, background: "linear-gradient(135deg,#7C3AED,#EC4899)", color: "white", fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 14, border: "none", cursor: "pointer" }}>
               {item.p}
             </button>
@@ -808,7 +808,7 @@ function ProfileScreen({ go }: { go: (s: Screen) => void }) {
   ];
 
   return (
-    <PhoneScreen bg="linear-gradient(180deg,#4C1D95 0%,#F5F3FF 36%)">
+    <PhoneScreen bg="radial-gradient(ellipse 500px 400px at 50% 0%, rgba(109,40,217,0.2), transparent 65%), #0A0B14">
       <StatusBar />
       <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "4px 16px 8px" }}>
         <BackBtn onClick={() => go("home")} />
@@ -846,32 +846,32 @@ function ProfileScreen({ go }: { go: (s: Screen) => void }) {
           { l: "Games Played", v: "1,294", e: "🎱" },
           { l: "Best Streak",  v: "14 🔥", e: ""   },
         ].map(s => (
-          <div key={s.l} style={{ padding: "12px 8px", borderRadius: 20, textAlign: "center", background: "white", boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
+          <div key={s.l} style={{ padding: "12px 8px", borderRadius: 16, textAlign: "center", background: "#14151F", border: "1px solid rgba(255,255,255,0.08)" }}>
             <div style={{ fontSize: 22, marginBottom: 4 }}>{s.e}</div>
-            <div style={{ fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 18, color: "#4C1D95" }}>{s.v}</div>
-            <div style={{ fontFamily: "General Sans, sans-serif", fontSize: 10, color: "#9CA3AF" }}>{s.l}</div>
+            <div style={{ fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 18, color: "#D4AF6A" }}>{s.v}</div>
+            <div style={{ fontFamily: "General Sans, sans-serif", fontSize: 10, color: "rgba(255,255,255,0.4)" }}>{s.l}</div>
           </div>
         ))}
       </div>
 
       {/* Card theme picker */}
-      <div style={{ margin: "0 16px 12px", padding: "16px", borderRadius: 22, background: "white", boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
-        <div style={{ fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 16, color: "#1A0A2E", marginBottom: 10 }}>Card Theme</div>
+      <div style={{ margin: "0 16px 12px", padding: "16px", borderRadius: 20, background: "#14151F", border: "1px solid rgba(255,255,255,0.08)" }}>
+        <div style={{ fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 16, color: "white", marginBottom: 10 }}>Card Theme</div>
         <div style={{ display: "flex", gap: 8 }}>
           {themes.map((t, i) => (
-            <button key={i} onClick={() => setTheme(i)} style={{ flex: 1, padding: "10px 0", borderRadius: 14, fontSize: 18, background: theme === i ? "#7C3AED" : "#F3F0FF", border: theme === i ? "2px solid #D4AF6A" : "2px solid transparent", cursor: "pointer" }}>{t}</button>
+            <button key={i} onClick={() => setTheme(i)} style={{ flex: 1, padding: "10px 0", borderRadius: 14, fontSize: 18, background: theme === i ? "rgba(212,175,106,0.16)" : "rgba(255,255,255,0.05)", border: theme === i ? "2px solid #D4AF6A" : "2px solid transparent", cursor: "pointer" }}>{t}</button>
           ))}
         </div>
       </div>
 
       {/* Achievements */}
-      <div style={{ margin: "0 16px 24px", padding: "16px", borderRadius: 22, background: "white", boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
-        <div style={{ fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 16, color: "#1A0A2E", marginBottom: 12 }}>Achievements</div>
+      <div style={{ margin: "0 16px 24px", padding: "16px", borderRadius: 20, background: "#14151F", border: "1px solid rgba(255,255,255,0.08)" }}>
+        <div style={{ fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 16, color: "white", marginBottom: 12 }}>Achievements</div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10 }}>
           {badges.map((b, i) => (
             <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-              <div style={{ width: "100%", aspectRatio: "1", borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "center", background: b.u ? "#7C3AED14" : "#F3F4F6", fontSize: 26, border: b.u ? "2px solid #7C3AED28" : "2px solid #E5E7EB", opacity: b.u ? 1 : 0.36 }}>{b.e}</div>
-              <span style={{ fontFamily: "General Sans, sans-serif", fontSize: 9, color: b.u ? "#6D28D9" : "#9CA3AF", textAlign: "center", fontWeight: 700 }}>{b.l}</span>
+              <div style={{ width: "100%", aspectRatio: "1", borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "center", background: b.u ? "rgba(212,175,106,0.12)" : "rgba(255,255,255,0.04)", fontSize: 26, border: b.u ? "2px solid rgba(212,175,106,0.3)" : "2px solid rgba(255,255,255,0.08)", opacity: b.u ? 1 : 0.36 }}>{b.e}</div>
+              <span style={{ fontFamily: "General Sans, sans-serif", fontSize: 9, color: b.u ? "#E6C687" : "rgba(255,255,255,0.4)", textAlign: "center", fontWeight: 700 }}>{b.l}</span>
             </div>
           ))}
         </div>
@@ -894,7 +894,7 @@ function DailyScreen({ go }: { go: (s: Screen) => void }) {
   ];
 
   return (
-    <PhoneScreen bg="linear-gradient(155deg,#4C1D95 0%,#7C3AED 42%,#EDE9FE 100%)">
+    <PhoneScreen bg="radial-gradient(ellipse 600px 500px at 50% 20%, rgba(109,40,217,0.26), transparent 70%), #0A0B14">
       <StatusBar />
       <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "4px 16px 12px" }}>
         <BackBtn onClick={() => go("home")} />
@@ -915,14 +915,14 @@ function DailyScreen({ go }: { go: (s: Screen) => void }) {
         {days.map(day => (
           <div key={day.d} style={{
             borderRadius: 20, padding: "11px 8px", display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
-            background: day.today ? "white" : day.done ? "rgba(16,185,129,0.18)" : day.locked ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.1)",
-            border: day.today ? `3px solid ${claimed ? "#10B981" : "#D4AF6A"}` : day.special ? "2px solid rgba(251,191,36,0.45)" : "2px solid transparent",
-            boxShadow: day.today ? "0 4px 22px rgba(251,191,36,0.42)" : "none",
+            background: day.today ? "rgba(212,175,106,0.14)" : day.done ? "rgba(63,174,123,0.14)" : day.locked ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.1)",
+            border: day.today ? `3px solid ${claimed ? "#3FAE7B" : "#D4AF6A"}` : day.special ? "2px solid rgba(212,175,106,0.45)" : "2px solid transparent",
+            boxShadow: day.today ? "0 4px 22px rgba(212,175,106,0.3)" : "none",
             opacity: day.locked ? 0.55 : 1,
           }}>
-            <span style={{ fontFamily: "General Sans, sans-serif", fontSize: 9, fontWeight: 800, color: day.today ? "#7C3AED" : "rgba(255,255,255,0.52)", letterSpacing: 0.5 }}>DAY {day.d}</span>
+            <span style={{ fontFamily: "General Sans, sans-serif", fontSize: 9, fontWeight: 800, color: day.today ? "#E6C687" : "rgba(255,255,255,0.52)", letterSpacing: 0.5 }}>DAY {day.d}</span>
             <span style={{ fontSize: 22, lineHeight: 1.2 }}>{day.locked ? "🔒" : day.e}</span>
-            <span style={{ fontFamily: "Fraunces, serif", fontSize: 11, fontWeight: 700, color: day.today ? "#4C1D95" : "rgba(255,255,255,0.8)", textAlign: "center" }}>
+            <span style={{ fontFamily: "Fraunces, serif", fontSize: 11, fontWeight: 700, color: day.today ? "#E6C687" : "rgba(255,255,255,0.8)", textAlign: "center" }}>
               {day.locked ? "Locked" : day.r}
             </span>
             {(day.done || (day.today && claimed)) && (
@@ -938,13 +938,13 @@ function DailyScreen({ go }: { go: (s: Screen) => void }) {
       </div>
 
       {/* Today's reward highlight */}
-      <div style={{ margin: "0 16px 14px", padding: "18px 20px", borderRadius: 26, background: "white", boxShadow: "0 8px 36px rgba(0,0,0,0.1)" }}>
-        <div style={{ fontFamily: "General Sans, sans-serif", fontSize: 12, color: "#9CA3AF", marginBottom: 10 }}>Today's Reward</div>
+      <div style={{ margin: "0 16px 14px", padding: "18px 20px", borderRadius: 22, background: "#14151F", border: "1px solid rgba(255,255,255,0.08)" }}>
+        <div style={{ fontFamily: "General Sans, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.4)", marginBottom: 10 }}>Today's Reward</div>
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <div style={{ width: 58, height: 58, borderRadius: 18, background: "linear-gradient(135deg,#D4AF6A,#D4AF6A)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, flexShrink: 0 }}>🪙</div>
+          <div style={{ width: 58, height: 58, borderRadius: 18, background: "linear-gradient(135deg,#E6C687,#D4AF6A)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, flexShrink: 0 }}>🪙</div>
           <div>
-            <div style={{ fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 26, color: "#4C1D95", lineHeight: 1.1 }}>300 Coins</div>
-            <div style={{ fontFamily: "General Sans, sans-serif", fontSize: 13, color: "#6B7280" }}>Day 5 reward · Come back tomorrow!</div>
+            <div style={{ fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 26, color: "#D4AF6A", lineHeight: 1.1 }}>300 Coins</div>
+            <div style={{ fontFamily: "General Sans, sans-serif", fontSize: 13, color: "rgba(255,255,255,0.45)" }}>Day 5 reward · Come back tomorrow!</div>
           </div>
         </div>
       </div>
@@ -952,8 +952,8 @@ function DailyScreen({ go }: { go: (s: Screen) => void }) {
       <div style={{ padding: "0 16px 24px" }}>
         <button onClick={() => !claimed && setClaimed(true)} style={{
           width: "100%", padding: "17px 0", borderRadius: 28,
-          background: claimed ? "#D1FAE5" : "linear-gradient(135deg,#D4AF6A,#D4AF6A)",
-          color: claimed ? "#065F46" : "#1A0A2E",
+          background: claimed ? "rgba(63,174,123,0.16)" : "linear-gradient(135deg,#E6C687,#D4AF6A)",
+          color: claimed ? "#3FAE7B" : "#1A0A2E",
           fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 22,
           border: "none", cursor: claimed ? "default" : "pointer",
           boxShadow: claimed ? "none" : "0 8px 36px #D4AF6A58",
@@ -1062,7 +1062,7 @@ function LiveScreen({ go }: { go: (s: Screen) => void }) {
   const coins = (u: number) => (u / 1_000_000).toLocaleString();
 
   return (
-    <PhoneScreen bg="linear-gradient(180deg,#1E1B4B 0%,#2D1B69 100%)">
+    <PhoneScreen bg="radial-gradient(ellipse 500px 400px at 50% 0%, rgba(109,40,217,0.18), transparent 70%), #0A0B14">
       <StatusBar />
       <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "4px 16px 10px" }}>
         <BackBtn onClick={() => go("home")} />
