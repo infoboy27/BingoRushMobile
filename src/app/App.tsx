@@ -30,7 +30,7 @@ type Screen =
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const COLS = ["B", "I", "N", "G", "O"];
-const COL_COLORS = ["#3B82F6", "#EC4899", "#10B981", "#F59E0B", "#8B5CF6"];
+const COL_COLORS = ["#3B82F6", "#EC4899", "#10B981", "#D4AF6A", "#8B5CF6"];
 
 // Bingo card — -1 = FREE center square
 const CARD = [
@@ -48,23 +48,23 @@ const RECENT: { l: string; n: number }[] = [
 
 // Fixed confetti positions for the Win screen
 const CONFETTI = [
-  { x: 8,  y: 10, c: "#FBBF24", r: true  }, { x: 22, y: 5,  c: "#EC4899", r: false },
+  { x: 8,  y: 10, c: "#D4AF6A", r: true  }, { x: 22, y: 5,  c: "#EC4899", r: false },
   { x: 40, y: 18, c: "#10B981", r: true  }, { x: 60, y: 4,  c: "#3B82F6", r: false },
   { x: 78, y: 14, c: "#8B5CF6", r: true  }, { x: 12, y: 32, c: "#EC4899", r: false },
-  { x: 30, y: 8,  c: "#FBBF24", r: true  }, { x: 52, y: 28, c: "#10B981", r: false },
+  { x: 30, y: 8,  c: "#D4AF6A", r: true  }, { x: 52, y: 28, c: "#10B981", r: false },
   { x: 70, y: 22, c: "#3B82F6", r: true  }, { x: 88, y: 36, c: "#8B5CF6", r: false },
-  { x: 18, y: 50, c: "#FBBF24", r: true  }, { x: 42, y: 44, c: "#EC4899", r: false },
+  { x: 18, y: 50, c: "#D4AF6A", r: true  }, { x: 42, y: 44, c: "#EC4899", r: false },
   { x: 62, y: 48, c: "#10B981", r: true  }, { x: 84, y: 56, c: "#3B82F6", r: false },
-  { x: 6,  y: 62, c: "#8B5CF6", r: true  }, { x: 35, y: 68, c: "#FBBF24", r: false },
+  { x: 6,  y: 62, c: "#8B5CF6", r: true  }, { x: 35, y: 68, c: "#D4AF6A", r: false },
   { x: 72, y: 72, c: "#EC4899", r: true  }, { x: 50, y: 60, c: "#10B981", r: false },
-  { x: 92, y: 20, c: "#FBBF24", r: true  }, { x: 25, y: 42, c: "#3B82F6", r: false },
+  { x: 92, y: 20, c: "#D4AF6A", r: true  }, { x: 25, y: 42, c: "#3B82F6", r: false },
 ];
 
 // ─── Shared components ────────────────────────────────────────────────────────
 
 function StatusBar() {
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 24px 4px", fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.88)", fontFamily: "Nunito, sans-serif" }}>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 24px 4px", fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.88)", fontFamily: "General Sans, sans-serif" }}>
       <span>9:41</span>
       <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
         <span style={{ fontSize: 8, letterSpacing: 1 }}>●●●●</span>
@@ -94,8 +94,8 @@ function BingoBall({ letter, number, size = 56, dim = false }: { letter: string;
       boxShadow: dim ? "none" : `0 4px 18px ${col}55`,
       border: `3px solid ${dim ? "#D1D5DB" : "rgba(255,255,255,0.42)"}`,
     }}>
-      <span style={{ fontFamily: "Fredoka, sans-serif", fontWeight: 700, lineHeight: 1, color: dim ? "#9CA3AF" : "white", fontSize: size * 0.26 }}>{letter}</span>
-      <span style={{ fontFamily: "Fredoka, sans-serif", fontWeight: 700, lineHeight: 1, color: dim ? "#9CA3AF" : "white", fontSize: size * 0.31 }}>{number}</span>
+      <span style={{ fontFamily: "Fraunces, serif", fontWeight: 700, lineHeight: 1, color: dim ? "#9CA3AF" : "white", fontSize: size * 0.26 }}>{letter}</span>
+      <span style={{ fontFamily: "Fraunces, serif", fontWeight: 700, lineHeight: 1, color: dim ? "#9CA3AF" : "white", fontSize: size * 0.31 }}>{number}</span>
     </div>
   );
 }
@@ -146,8 +146,8 @@ function SplashScreen({ go }: { go: (s: Screen) => void }) {
             animation: `float ${2.4 + idx * 0.3}s ease-in-out infinite`,
             animationDelay: `${idx * 0.22}s`,
           }}>
-            <span style={{ fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: b.s * 0.27, color: "white", lineHeight: 1 }}>{b.l}</span>
-            <span style={{ fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: b.s * 0.31, color: "white", lineHeight: 1 }}>{b.n}</span>
+            <span style={{ fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: b.s * 0.27, color: "white", lineHeight: 1 }}>{b.l}</span>
+            <span style={{ fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: b.s * 0.31, color: "white", lineHeight: 1 }}>{b.n}</span>
           </div>
         );
       })}
@@ -156,17 +156,17 @@ function SplashScreen({ go }: { go: (s: Screen) => void }) {
         {/* Logo */}
         <div style={{
           width: 124, height: 124, borderRadius: 36,
-          background: "linear-gradient(140deg,#FBBF24 0%,#F59E0B 60%,#D97706 100%)",
+          background: "linear-gradient(140deg,#D4AF6A 0%,#D4AF6A 60%,#D97706 100%)",
           display: "flex", alignItems: "center", justifyContent: "center",
           fontSize: 64, marginBottom: 24,
-          boxShadow: "0 0 80px #FBBF2475, 0 20px 56px rgba(0,0,0,0.45)",
+          boxShadow: "0 0 80px #D4AF6A75, 0 20px 56px rgba(0,0,0,0.45)",
           border: "4px solid rgba(255,255,255,0.28)",
           animation: "pulse 3s ease-in-out infinite",
         }}>🎱</div>
-        <h1 style={{ fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 54, color: "white", lineHeight: 1, marginBottom: 10, textShadow: "0 4px 24px rgba(0,0,0,0.5)", letterSpacing: -1 }}>
-          Bingo Rush
+        <h1 style={{ fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 54, color: "white", lineHeight: 1, marginBottom: 10, textShadow: "0 4px 24px rgba(0,0,0,0.5)", letterSpacing: -1 }}>
+          Casino Rush
         </h1>
-        <p style={{ fontFamily: "Nunito, sans-serif", color: "rgba(255,255,255,0.6)", fontSize: 17, marginBottom: 72, textAlign: "center" }}>
+        <p style={{ fontFamily: "General Sans, sans-serif", color: "rgba(255,255,255,0.6)", fontSize: 17, marginBottom: 72, textAlign: "center" }}>
           The Ultimate Bingo Experience ✨
         </p>
         {/* Loading animation */}
@@ -174,19 +174,19 @@ function SplashScreen({ go }: { go: (s: Screen) => void }) {
           {[0, 1, 2].map(i => (
             <div key={i} style={{
               width: 11, height: 11, borderRadius: "50%",
-              background: ["#FBBF24", "#EC4899", "#8B5CF6"][i],
+              background: ["#D4AF6A", "#EC4899", "#8B5CF6"][i],
               animation: "loadDot 1.2s ease-in-out infinite",
               animationDelay: `${i * 0.22}s`,
             }} />
           ))}
         </div>
-        <p style={{ fontFamily: "Nunito, sans-serif", color: "rgba(255,255,255,0.38)", fontSize: 13, marginBottom: 52 }}>Loading your game…</p>
+        <p style={{ fontFamily: "General Sans, sans-serif", color: "rgba(255,255,255,0.38)", fontSize: 13, marginBottom: 52 }}>Loading your game…</p>
         <button onClick={() => go("home")} style={{
           padding: "18px 56px", borderRadius: 100,
-          background: "linear-gradient(135deg,#FBBF24 0%,#F59E0B 100%)",
-          color: "#1A0A2E", fontFamily: "Fredoka, sans-serif",
+          background: "linear-gradient(135deg,#D4AF6A 0%,#D4AF6A 100%)",
+          color: "#1A0A2E", fontFamily: "Fraunces, serif",
           fontWeight: 700, fontSize: 22, border: "none", cursor: "pointer",
-          boxShadow: "0 8px 36px #FBBF2460, 0 2px 0 #D97706",
+          boxShadow: "0 8px 36px #D4AF6A60, 0 2px 0 #D97706",
           letterSpacing: 0.3,
         }}>▶  Tap to Play</button>
       </div>
@@ -199,7 +199,7 @@ function HomeScreen({ go }: { go: (s: Screen) => void }) {
   const secondaryBtns: { e: string; l: string; bg: string; s: Screen }[] = [
     { e: "🎁", l: "Daily Reward", bg: "linear-gradient(135deg,#10B981,#059669)", s: "daily" },
     { e: "🛒", l: "Shop",         bg: "linear-gradient(135deg,#3B82F6,#1D4ED8)", s: "shop"  },
-    { e: "🏆", l: "Leaderboard", bg: "linear-gradient(135deg,#F59E0B,#D97706)", s: "profile"},
+    { e: "🏆", l: "Leaderboard", bg: "linear-gradient(135deg,#D4AF6A,#D97706)", s: "profile"},
     { e: "👤", l: "Profile",      bg: "linear-gradient(135deg,#EC4899,#BE185D)", s: "profile"},
   ];
   return (
@@ -207,14 +207,14 @@ function HomeScreen({ go }: { go: (s: Screen) => void }) {
       <StatusBar />
       {/* Top bar */}
       <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "4px 16px 12px" }}>
-        <div style={{ width: 46, height: 46, borderRadius: "50%", background: "linear-gradient(135deg,#FBBF24,#EC4899)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, border: "2.5px solid rgba(255,255,255,0.42)", flexShrink: 0 }}>🦊</div>
+        <div style={{ width: 46, height: 46, borderRadius: "50%", background: "linear-gradient(135deg,#D4AF6A,#EC4899)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, border: "2.5px solid rgba(255,255,255,0.42)", flexShrink: 0 }}>🦊</div>
         <div style={{ flex: 1 }}>
-          <div style={{ fontFamily: "Fredoka, sans-serif", color: "white", fontWeight: 700, fontSize: 16, lineHeight: 1.2 }}>StarPlayer99</div>
-          <div style={{ color: "rgba(255,255,255,0.62)", fontSize: 12, fontFamily: "Nunito, sans-serif" }}>Level 24 · Pro</div>
+          <div style={{ fontFamily: "Fraunces, serif", color: "white", fontWeight: 700, fontSize: 16, lineHeight: 1.2 }}>StarPlayer99</div>
+          <div style={{ color: "rgba(255,255,255,0.62)", fontSize: 12, fontFamily: "General Sans, sans-serif" }}>Level 24 · Pro</div>
         </div>
         <div style={{ display: "flex", gap: 6 }}>
-          <Pill><span style={{ fontSize: 14 }}>🪙</span><span style={{ fontFamily: "Fredoka, sans-serif", color: "#FBBF24", fontWeight: 700, fontSize: 13 }}>4,250</span></Pill>
-          <Pill><span style={{ fontSize: 14 }}>💎</span><span style={{ fontFamily: "Fredoka, sans-serif", color: "#A5F3FC", fontWeight: 700, fontSize: 13 }}>120</span></Pill>
+          <Pill><span style={{ fontSize: 14 }}>🪙</span><span style={{ fontFamily: "Fraunces, serif", color: "#D4AF6A", fontWeight: 700, fontSize: 13 }}>4,250</span></Pill>
+          <Pill><span style={{ fontSize: 14 }}>💎</span><span style={{ fontFamily: "Fraunces, serif", color: "#A5F3FC", fontWeight: 700, fontSize: 13 }}>120</span></Pill>
           <button style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(255,255,255,0.14)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <Settings size={16} color="rgba(255,255,255,0.88)" />
           </button>
@@ -222,11 +222,11 @@ function HomeScreen({ go }: { go: (s: Screen) => void }) {
       </div>
 
       {/* Weekend Jackpot banner */}
-      <div style={{ margin: "0 16px 14px", padding: "14px 16px", borderRadius: 24, background: "linear-gradient(135deg,#FBBF24,#F59E0B)", boxShadow: "0 8px 30px #FBBF2455", display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}>
+      <div style={{ margin: "0 16px 14px", padding: "14px 16px", borderRadius: 24, background: "linear-gradient(135deg,#D4AF6A,#D4AF6A)", boxShadow: "0 8px 30px #D4AF6A55", display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}>
         <span style={{ fontSize: 34 }}>🏆</span>
         <div style={{ flex: 1 }}>
-          <div style={{ fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 17, color: "#1A0A2E" }}>Weekend Jackpot</div>
-          <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 12, color: "#78350F" }}>💎 5,000 gem prize pool · Ends Sunday</div>
+          <div style={{ fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 17, color: "#1A0A2E" }}>Weekend Jackpot</div>
+          <div style={{ fontFamily: "General Sans, sans-serif", fontSize: 12, color: "#78350F" }}>💎 5,000 gem prize pool · Ends Sunday</div>
         </div>
         <ChevronRight size={18} color="#78350F" />
       </div>
@@ -235,7 +235,7 @@ function HomeScreen({ go }: { go: (s: Screen) => void }) {
       <div style={{ padding: "0 16px 12px" }}>
         <button onClick={() => go("lobby")} style={{ width: "100%", padding: "20px 0", borderRadius: 28, display: "flex", alignItems: "center", justifyContent: "center", gap: 12, background: "linear-gradient(135deg,#8B5CF6,#EC4899)", boxShadow: "0 12px 44px #8B5CF668", border: "none", cursor: "pointer" }}>
           <Play size={28} fill="white" color="white" />
-          <span style={{ fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 28, color: "white" }}>Play Now!</span>
+          <span style={{ fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 28, color: "white" }}>Play Now!</span>
         </button>
       </div>
 
@@ -244,7 +244,7 @@ function HomeScreen({ go }: { go: (s: Screen) => void }) {
         {secondaryBtns.map(btn => (
           <button key={btn.l} onClick={() => go(btn.s)} style={{ padding: "14px 16px", borderRadius: 20, display: "flex", alignItems: "center", gap: 10, background: btn.bg, border: "none", cursor: "pointer", boxShadow: "0 4px 18px rgba(0,0,0,0.2)" }}>
             <span style={{ fontSize: 28 }}>{btn.e}</span>
-            <span style={{ fontFamily: "Fredoka, sans-serif", fontWeight: 600, fontSize: 15, color: "white" }}>{btn.l}</span>
+            <span style={{ fontFamily: "Fraunces, serif", fontWeight: 600, fontSize: 15, color: "white" }}>{btn.l}</span>
           </button>
         ))}
       </div>
@@ -257,8 +257,8 @@ function HomeScreen({ go }: { go: (s: Screen) => void }) {
           { l: "Rank",   v: "#142", e: "⭐" },
         ].map(s => (
           <div key={s.l} style={{ textAlign: "center" }}>
-            <div style={{ fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 20, color: "#4C1D95" }}>{s.v}</div>
-            <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 12, color: "#6B7280" }}>{s.l}</div>
+            <div style={{ fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 20, color: "#4C1D95" }}>{s.v}</div>
+            <div style={{ fontFamily: "General Sans, sans-serif", fontSize: 12, color: "#6B7280" }}>{s.l}</div>
           </div>
         ))}
       </div>
@@ -268,7 +268,7 @@ function HomeScreen({ go }: { go: (s: Screen) => void }) {
 }
 
 // ─── 3. Lobby ─────────────────────────────────────────────────────────────────
-const ROOM_COLORS = ["#3B82F6", "#EC4899", "#F59E0B", "#8B5CF6"];
+const ROOM_COLORS = ["#3B82F6", "#EC4899", "#D4AF6A", "#8B5CF6"];
 const MOCK_ROOMS = [
   { id: "classic", name: "Classic Room", emoji: "🎱", entryFee: 100,  advertisedPrize: 2500,  capacity: 20, difficulty: "Easy",   rakeBps: 1000, payoutWeightsBps: [10000] },
   { id: "speed",   name: "Speed Bingo",  emoji: "⚡",  entryFee: 250,  advertisedPrize: 6000,  capacity: 20, difficulty: "Medium", rakeBps: 1000, payoutWeightsBps: [10000] },
@@ -299,18 +299,18 @@ function LobbyScreen({ go, setSess }: { go: (s: Screen) => void; setSess: (s: Se
       <StatusBar />
       <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "4px 16px 14px" }}>
         <BackBtn onClick={() => go("home")} />
-        <h2 style={{ fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 24, color: "white", flex: 1, margin: 0 }}>Game Rooms</h2>
-        <Pill><span>🪙</span><span style={{ fontFamily: "Fredoka, sans-serif", color: "#FBBF24", fontWeight: 700, fontSize: 13 }}>4,250</span></Pill>
+        <h2 style={{ fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 24, color: "white", flex: 1, margin: 0 }}>Game Rooms</h2>
+        <Pill><span>🪙</span><span style={{ fontFamily: "Fraunces, serif", color: "#D4AF6A", fontWeight: 700, fontSize: 13 }}>4,250</span></Pill>
       </div>
 
       {/* Filter tabs */}
       <div style={{ display: "flex", gap: 8, padding: "0 16px 14px" }}>
         {tabs.map((t, i) => (
-          <button key={t} onClick={() => setTab(i)} style={{ flex: 1, padding: "8px 0", borderRadius: 100, fontFamily: "Fredoka, sans-serif", fontSize: 13, fontWeight: 700, background: tab === i ? "white" : "rgba(255,255,255,0.15)", color: tab === i ? "#4C1D95" : "white", border: "none", cursor: "pointer" }}>{t}</button>
+          <button key={t} onClick={() => setTab(i)} style={{ flex: 1, padding: "8px 0", borderRadius: 100, fontFamily: "Fraunces, serif", fontSize: 13, fontWeight: 700, background: tab === i ? "white" : "rgba(255,255,255,0.15)", color: tab === i ? "#4C1D95" : "white", border: "none", cursor: "pointer" }}>{t}</button>
         ))}
       </div>
 
-      <div style={{ padding: "0 16px 8px", fontFamily: "Nunito, sans-serif", fontSize: 11, color: live ? "#10B981" : "rgba(255,255,255,0.5)", fontWeight: 700 }}>
+      <div style={{ padding: "0 16px 8px", fontFamily: "General Sans, sans-serif", fontSize: 11, color: live ? "#10B981" : "rgba(255,255,255,0.5)", fontWeight: 700 }}>
         {live ? "● live rooms from backend" : "○ demo rooms (backend offline)"}
       </div>
 
@@ -324,10 +324,10 @@ function LobbyScreen({ go, setSess }: { go: (s: Screen) => void; setSess: (s: Se
             <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 12 }}>
               <div style={{ width: 52, height: 52, borderRadius: 16, background: `${c}18`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, flexShrink: 0 }}>{room.emoji}</div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 18, color: "#1A0A2E" }}>{room.name}</div>
+                <div style={{ fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 18, color: "#1A0A2E" }}>{room.name}</div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
-                  <span style={{ padding: "2px 8px", borderRadius: 100, background: `${c}18`, color: c, fontFamily: "Nunito, sans-serif", fontWeight: 800, fontSize: 11 }}>{room.difficulty}</span>
-                  <span style={{ fontFamily: "Nunito, sans-serif", fontSize: 12, color: "#6B7280" }}>👥 {room.capacity} max</span>
+                  <span style={{ padding: "2px 8px", borderRadius: 100, background: `${c}18`, color: c, fontFamily: "General Sans, sans-serif", fontWeight: 800, fontSize: 11 }}>{room.difficulty}</span>
+                  <span style={{ fontFamily: "General Sans, sans-serif", fontSize: 12, color: "#6B7280" }}>👥 {room.capacity} max</span>
                 </div>
               </div>
             </div>
@@ -335,12 +335,12 @@ function LobbyScreen({ go, setSess }: { go: (s: Screen) => void; setSess: (s: Se
               <div style={{ display: "flex", gap: 20 }}>
                 {[{ label: "Entry", val: `🪙 ${room.entryFee}` }, { label: "Max Prize", val: `🪙 ${prize}` }].map(x => (
                   <div key={x.label}>
-                    <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 11, color: "#9CA3AF" }}>{x.label}</div>
-                    <div style={{ fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 15, color: "#374151" }}>{x.val}</div>
+                    <div style={{ fontFamily: "General Sans, sans-serif", fontSize: 11, color: "#9CA3AF" }}>{x.label}</div>
+                    <div style={{ fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 15, color: "#374151" }}>{x.val}</div>
                   </div>
                 ))}
               </div>
-              <button onClick={() => join(room, c)} style={{ padding: "10px 22px", borderRadius: 100, background: c, color: "white", fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 16, border: "none", cursor: "pointer", boxShadow: `0 4px 18px ${c}58` }}>
+              <button onClick={() => join(room, c)} style={{ padding: "10px 22px", borderRadius: 100, background: c, color: "white", fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 16, border: "none", cursor: "pointer", boxShadow: `0 4px 18px ${c}58` }}>
                 Join ▶
               </button>
             </div>
@@ -382,14 +382,14 @@ function CardsScreen({ go, sess, setSess }: { go: (s: Screen) => void; sess: Ses
     <div style={{ borderRadius: 14, overflow: "hidden", border: "2.5px solid #7C3AED", background: "white", transform: `rotate(${tilt}deg)`, boxShadow: "0 6px 22px rgba(0,0,0,0.14)" }}>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 1, padding: 5, paddingTop: 0 }}>
         {COLS.map((c, ci) => (
-          <div key={c} style={{ textAlign: "center", padding: "5px 0", background: COL_COLORS[ci], fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 12, color: "white", borderRadius: 3 }}>{c}</div>
+          <div key={c} style={{ textAlign: "center", padding: "5px 0", background: COL_COLORS[ci], fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 12, color: "white", borderRadius: 3 }}>{c}</div>
         ))}
         {CARD.flat().map((num, i) => {
           const free = num === -1;
           const marked = INIT_MARKED.has(num);
           const ci = i % 5;
           return (
-            <div key={i} style={{ aspectRatio: "1", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 5, background: free ? COL_COLORS[2] : marked ? `${COL_COLORS[ci]}28` : "#F9FAFB", fontSize: 9, fontFamily: "Fredoka, sans-serif", fontWeight: 700, color: free ? "white" : marked ? COL_COLORS[ci] : "#374151" }}>
+            <div key={i} style={{ aspectRatio: "1", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 5, background: free ? COL_COLORS[2] : marked ? `${COL_COLORS[ci]}28` : "#F9FAFB", fontSize: 9, fontFamily: "Fraunces, serif", fontWeight: 700, color: free ? "white" : marked ? COL_COLORS[ci] : "#374151" }}>
               {free ? "★" : num}
             </div>
           );
@@ -403,13 +403,13 @@ function CardsScreen({ go, sess, setSess }: { go: (s: Screen) => void; sess: Ses
       <StatusBar />
       <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "4px 16px 14px" }}>
         <BackBtn onClick={() => go("lobby")} />
-        <h2 style={{ fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 24, color: "white", margin: 0 }}>Choose Cards</h2>
+        <h2 style={{ fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 24, color: "white", margin: 0 }}>Choose Cards</h2>
       </div>
 
       {/* Card count selector */}
       <div style={{ display: "flex", gap: 10, padding: "0 16px 20px" }}>
         {[1, 2, 3, 4].map(n => (
-          <button key={n} onClick={() => setSel(n)} style={{ flex: 1, padding: "12px 0", borderRadius: 18, fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 22, background: sel === n ? "white" : "rgba(255,255,255,0.15)", color: sel === n ? "#7C3AED" : "white", border: sel === n ? "3px solid #FBBF24" : "3px solid transparent", cursor: "pointer", boxShadow: sel === n ? "0 4px 18px rgba(0,0,0,0.12)" : "none" }}>{n}</button>
+          <button key={n} onClick={() => setSel(n)} style={{ flex: 1, padding: "12px 0", borderRadius: 18, fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 22, background: sel === n ? "white" : "rgba(255,255,255,0.15)", color: sel === n ? "#7C3AED" : "white", border: sel === n ? "3px solid #D4AF6A" : "3px solid transparent", cursor: "pointer", boxShadow: sel === n ? "0 4px 18px rgba(0,0,0,0.12)" : "none" }}>{n}</button>
         ))}
       </div>
 
@@ -438,20 +438,20 @@ function CardsScreen({ go, sess, setSess }: { go: (s: Screen) => void; sess: Ses
         {[
           { label: "Entry Cost",  val: `🪙 ${costs[sel - 1]}`,   color: "#4C1D95" },
           { label: "Max Win",     val: `🪙 ${rewards[sel - 1]}`, color: "#10B981" },
-          { label: "Odds Boost",  val: `+${sel * 8}%`,            color: "#F59E0B" },
+          { label: "Odds Boost",  val: `+${sel * 8}%`,            color: "#D4AF6A" },
         ].map((x, i, arr) => (
           <div key={x.label} style={{ textAlign: "center", ...(i < arr.length - 1 ? { paddingRight: 16, borderRight: "1px solid #F3F4F6" } : {}) }}>
-            <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 11, color: "#9CA3AF", marginBottom: 4 }}>{x.label}</div>
-            <div style={{ fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 20, color: x.color }}>{x.val}</div>
+            <div style={{ fontFamily: "General Sans, sans-serif", fontSize: 11, color: "#9CA3AF", marginBottom: 4 }}>{x.label}</div>
+            <div style={{ fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 20, color: x.color }}>{x.val}</div>
           </div>
         ))}
       </div>
 
       <div style={{ padding: "0 16px 24px" }}>
-        <button onClick={start} disabled={busy} style={{ width: "100%", padding: "20px 0", borderRadius: 28, background: busy ? "rgba(139,92,246,0.5)" : "linear-gradient(135deg,#8B5CF6,#EC4899)", color: "white", fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 24, border: "none", cursor: busy ? "default" : "pointer", boxShadow: "0 10px 36px #8B5CF648" }}>
+        <button onClick={start} disabled={busy} style={{ width: "100%", padding: "20px 0", borderRadius: 28, background: busy ? "rgba(139,92,246,0.5)" : "linear-gradient(135deg,#8B5CF6,#EC4899)", color: "white", fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 24, border: "none", cursor: busy ? "default" : "pointer", boxShadow: "0 10px 36px #8B5CF648" }}>
           {busy ? (step || "Opening round on-chain…") : "Start Game 🎯"}
         </button>
-        {err && <div style={{ marginTop: 10, fontFamily: "Nunito, sans-serif", fontSize: 12, color: "#DC2626", textAlign: "center" }}>{err}</div>}
+        {err && <div style={{ marginTop: 10, fontFamily: "General Sans, sans-serif", fontSize: 12, color: "#DC2626", textAlign: "center" }}>{err}</div>}
       </div>
     </PhoneScreen>
   );
@@ -515,9 +515,9 @@ function GameScreen({ go, sess, setSess }: { go: (s: Screen) => void; sess: Sess
         <button onClick={() => go("lobby")} style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,0.1)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
           <ArrowLeft size={15} color="white" />
         </button>
-        <span style={{ fontFamily: "Fredoka, sans-serif", color: "white", fontWeight: 700, fontSize: 14, flex: 1 }}>{sess.roomName || "Classic Room"}</span>
+        <span style={{ fontFamily: "Fraunces, serif", color: "white", fontWeight: 700, fontSize: 14, flex: 1 }}>{sess.roomName || "Classic Room"}</span>
         {pills.map(x => (
-          <div key={x.e} style={{ display: "flex", alignItems: "center", gap: 3, padding: "4px 8px", borderRadius: 100, background: "rgba(255,255,255,0.1)", fontFamily: "Nunito, sans-serif", fontSize: 11, color: "white", fontWeight: 600 }}>
+          <div key={x.e} style={{ display: "flex", alignItems: "center", gap: 3, padding: "4px 8px", borderRadius: 100, background: "rgba(255,255,255,0.1)", fontFamily: "General Sans, sans-serif", fontSize: 11, color: "white", fontWeight: 600 }}>
             <span>{x.e}</span><span>{x.v}</span>
           </div>
         ))}
@@ -525,7 +525,7 @@ function GameScreen({ go, sess, setSess }: { go: (s: Screen) => void; sess: Sess
 
       {/* Current ball display */}
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "8px 0 6px" }}>
-        <span style={{ fontFamily: "Nunito, sans-serif", fontSize: 10, color: "rgba(255,255,255,0.42)", letterSpacing: 2.5, textTransform: "uppercase", marginBottom: 6 }}>{real ? (statusMsg || "Current Ball") : "Current Ball"}</span>
+        <span style={{ fontFamily: "General Sans, sans-serif", fontSize: 10, color: "rgba(255,255,255,0.42)", letterSpacing: 2.5, textTransform: "uppercase", marginBottom: 6 }}>{real ? (statusMsg || "Current Ball") : "Current Ball"}</span>
         {current ? <BingoBall letter={current.l} number={current.n} size={76} /> : (
           <div style={{ width: 76, height: 76, borderRadius: "50%", background: "rgba(255,255,255,0.08)", border: "3px solid rgba(255,255,255,0.15)" }} />
         )}
@@ -542,7 +542,7 @@ function GameScreen({ go, sess, setSess }: { go: (s: Screen) => void; sess: Sess
         <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)" }}>
           {COLS.map((c, ci) => (
             <div key={c} style={{ padding: "9px 0", textAlign: "center", background: COL_COLORS[ci] }}>
-              <span style={{ fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 22, color: "white" }}>{c}</span>
+              <span style={{ fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 22, color: "white" }}>{c}</span>
             </div>
           ))}
         </div>
@@ -561,10 +561,10 @@ function GameScreen({ go, sess, setSess }: { go: (s: Screen) => void; sess: Sess
                   transition: "all 0.15s",
                 }}>
                   {free ? (
-                    <span style={{ fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 10, color: "#7C3AED", lineHeight: 1.2, textAlign: "center" }}>FREE</span>
+                    <span style={{ fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 10, color: "#7C3AED", lineHeight: 1.2, textAlign: "center" }}>FREE</span>
                   ) : (
                     <>
-                      <span style={{ fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 16, color: mk ? COL_COLORS[ci] : "#374151" }}>{num}</span>
+                      <span style={{ fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 16, color: mk ? COL_COLORS[ci] : "#374151" }}>{num}</span>
                       {mk && (
                         <div style={{ position: "absolute", top: 3, right: 3, width: 14, height: 14, borderRadius: "50%", background: COL_COLORS[ci], display: "flex", alignItems: "center", justifyContent: "center" }}>
                           <Check size={9} color="white" strokeWidth={3} />
@@ -582,11 +582,11 @@ function GameScreen({ go, sess, setSess }: { go: (s: Screen) => void; sess: Sess
       {/* BINGO button (mock) / on-chain status (real) */}
       <div style={{ padding: "10px 10px 6px" }}>
         {real ? (
-          <div style={{ width: "100%", padding: "13px 0", borderRadius: 20, background: "rgba(255,255,255,0.1)", fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 16, color: "white", textAlign: "center" }}>
+          <div style={{ width: "100%", padding: "13px 0", borderRadius: 20, background: "rgba(255,255,255,0.1)", fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 16, color: "white", textAlign: "center" }}>
             ⛓️ {statusMsg || "Auto-marked & settled on-chain"}
           </div>
         ) : (
-          <button onClick={() => go("win")} style={{ width: "100%", padding: "13px 0", borderRadius: 20, background: "linear-gradient(135deg,#FBBF24,#F59E0B)", fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 22, color: "#1A0A2E", border: "none", cursor: "pointer", boxShadow: "0 4px 22px #FBBF2458" }}>
+          <button onClick={() => go("win")} style={{ width: "100%", padding: "13px 0", borderRadius: 20, background: "linear-gradient(135deg,#D4AF6A,#D4AF6A)", fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 22, color: "#1A0A2E", border: "none", cursor: "pointer", boxShadow: "0 4px 22px #D4AF6A58" }}>
             🎉  BINGO!
           </button>
         )}
@@ -595,7 +595,7 @@ function GameScreen({ go, sess, setSess }: { go: (s: Screen) => void; sess: Sess
       {/* Secondary controls */}
       <div style={{ display: "flex", gap: 8, padding: "0 10px 10px" }}>
         {["⚡ Auto-Mark", "💥 Power Up"].map(l => (
-          <button key={l} style={{ flex: 1, padding: "9px 0", borderRadius: 14, background: "rgba(255,255,255,0.1)", border: "none", cursor: "pointer", fontFamily: "Nunito, sans-serif", fontSize: 13, color: "white", fontWeight: 700 }}>{l}</button>
+          <button key={l} style={{ flex: 1, padding: "9px 0", borderRadius: 14, background: "rgba(255,255,255,0.1)", border: "none", cursor: "pointer", fontFamily: "General Sans, sans-serif", fontSize: 13, color: "white", fontWeight: 700 }}>{l}</button>
         ))}
         <button onClick={() => setSound(!sound)} style={{ padding: "9px 12px", borderRadius: 14, background: "rgba(255,255,255,0.1)", border: "none", cursor: "pointer", display: "flex", alignItems: "center" }}>
           {sound ? <Volume2 size={16} color="white" /> : <VolumeX size={16} color="#9CA3AF" />}
@@ -625,31 +625,31 @@ function WinScreen({ go, sess }: { go: (s: Screen) => void; sess: Session }) {
         }} />
       ))}
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "52px 24px 0" }}>
-        <span style={{ fontSize: 72, marginBottom: 4, filter: "drop-shadow(0 8px 28px #FBBF2488)" }}>🏆</span>
-        <h1 style={{ fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 60, color: "#FBBF24", textShadow: "0 0 48px #FBBF2485, 0 4px 0 #D97706", lineHeight: 1, margin: "0 0 8px" }}>BINGO!</h1>
-        <p style={{ fontFamily: "Nunito, sans-serif", color: "rgba(255,255,255,0.72)", fontSize: 17, marginBottom: 28, textAlign: "center" }}>You won {sess.roomName ? `the ${sess.roomName}` : "the Classic Room"}! 🎊</p>
+        <span style={{ fontSize: 72, marginBottom: 4, filter: "drop-shadow(0 8px 28px #D4AF6A88)" }}>🏆</span>
+        <h1 style={{ fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 60, color: "#D4AF6A", textShadow: "0 0 48px #D4AF6A85, 0 4px 0 #D97706", lineHeight: 1, margin: "0 0 8px" }}>BINGO!</h1>
+        <p style={{ fontFamily: "General Sans, sans-serif", color: "rgba(255,255,255,0.72)", fontSize: 17, marginBottom: 28, textAlign: "center" }}>You won {sess.roomName ? `the ${sess.roomName}` : "the Classic Room"}! 🎊</p>
 
         {/* Rewards panel */}
         <div style={{ width: "100%", borderRadius: 28, padding: "4px 20px", marginBottom: 16, background: "rgba(255,255,255,0.09)", backdropFilter: "blur(12px)", border: "1px solid rgba(255,255,255,0.16)" }}>
           {([
-            { e: "🪙", l: "Coins Won",  v: `+${(won ?? 2500).toLocaleString()}`,  c: "#FBBF24" },
+            { e: "🪙", l: "Coins Won",  v: `+${(won ?? 2500).toLocaleString()}`,  c: "#D4AF6A" },
             { e: "⭐", l: "XP Gained",  v: "+450 XP", c: "#A5F3FC" },
             { e: "🏅", l: won !== undefined ? "Settled" : "Ranking", v: won !== undefined ? "on-chain ✓" : "#4 of 20", c: "#C4B5FD" },
           ]).map(r => (
             <div key={r.l} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "13px 0", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <span style={{ fontSize: 24 }}>{r.e}</span>
-                <span style={{ fontFamily: "Nunito, sans-serif", color: "rgba(255,255,255,0.72)", fontSize: 15 }}>{r.l}</span>
+                <span style={{ fontFamily: "General Sans, sans-serif", color: "rgba(255,255,255,0.72)", fontSize: 15 }}>{r.l}</span>
               </div>
-              <span style={{ fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 20, color: r.c }}>{r.v}</span>
+              <span style={{ fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 20, color: r.c }}>{r.v}</span>
             </div>
           ))}
         </div>
 
-        <button onClick={() => go("lobby")} style={{ width: "100%", padding: "16px 0", borderRadius: 22, background: "linear-gradient(135deg,#FBBF24,#F59E0B)", fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 22, color: "#1A0A2E", border: "none", cursor: "pointer", boxShadow: "0 8px 36px #FBBF2458", marginBottom: 10 }}>
+        <button onClick={() => go("lobby")} style={{ width: "100%", padding: "16px 0", borderRadius: 22, background: "linear-gradient(135deg,#D4AF6A,#D4AF6A)", fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 22, color: "#1A0A2E", border: "none", cursor: "pointer", boxShadow: "0 8px 36px #D4AF6A58", marginBottom: 10 }}>
           Play Again 🎱
         </button>
-        <button onClick={() => go("home")} style={{ width: "100%", padding: "14px 0", borderRadius: 22, background: "rgba(255,255,255,0.08)", fontFamily: "Fredoka, sans-serif", fontWeight: 600, fontSize: 18, color: "white", border: "2px solid rgba(255,255,255,0.16)", cursor: "pointer" }}>
+        <button onClick={() => go("home")} style={{ width: "100%", padding: "14px 0", borderRadius: 22, background: "rgba(255,255,255,0.08)", fontFamily: "Fraunces, serif", fontWeight: 600, fontSize: 18, color: "white", border: "2px solid rgba(255,255,255,0.16)", cursor: "pointer" }}>
           Back to Home
         </button>
       </div>
@@ -665,20 +665,20 @@ function LoseScreen({ go }: { go: (s: Screen) => void }) {
       <StatusBar />
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "56px 24px 0" }}>
         <span style={{ fontSize: 72, marginBottom: 16 }}>😅</span>
-        <h1 style={{ fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 38, color: "white", margin: "0 0 10px" }}>Almost There!</h1>
-        <p style={{ fontFamily: "Nunito, sans-serif", color: "rgba(255,255,255,0.62)", fontSize: 15, textAlign: "center", marginBottom: 28 }}>
+        <h1 style={{ fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 38, color: "white", margin: "0 0 10px" }}>Almost There!</h1>
+        <p style={{ fontFamily: "General Sans, sans-serif", color: "rgba(255,255,255,0.62)", fontSize: 15, textAlign: "center", marginBottom: 28 }}>
           You were so close! Just 2 more numbers needed for Bingo.
         </p>
 
         {/* Progress card */}
         <div style={{ width: "100%", borderRadius: 24, padding: "18px 20px", marginBottom: 14, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)" }}>
-          <div style={{ fontFamily: "Nunito, sans-serif", color: "rgba(255,255,255,0.5)", fontSize: 13, marginBottom: 10 }}>Game Progress</div>
+          <div style={{ fontFamily: "General Sans, sans-serif", color: "rgba(255,255,255,0.5)", fontSize: 13, marginBottom: 10 }}>Game Progress</div>
           <div style={{ width: "100%", borderRadius: 100, height: 10, background: "rgba(255,255,255,0.1)", marginBottom: 6 }}>
             <div style={{ width: "72%", height: 10, borderRadius: 100, background: "linear-gradient(90deg,#8B5CF6,#EC4899)" }} />
           </div>
           <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <span style={{ fontFamily: "Nunito, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.38)" }}>72% complete</span>
-            <span style={{ fontFamily: "Nunito, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.38)" }}>Rank: 8/20</span>
+            <span style={{ fontFamily: "General Sans, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.38)" }}>72% complete</span>
+            <span style={{ fontFamily: "General Sans, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.38)" }}>Rank: 8/20</span>
           </div>
         </div>
 
@@ -686,15 +686,15 @@ function LoseScreen({ go }: { go: (s: Screen) => void }) {
         <div style={{ width: "100%", borderRadius: 24, padding: "14px 18px", marginBottom: 28, display: "flex", alignItems: "center", gap: 14, background: "linear-gradient(135deg,rgba(124,58,237,0.2),rgba(236,72,153,0.2))", border: "1px solid rgba(139,92,246,0.28)" }}>
           <span style={{ fontSize: 36 }}>🎁</span>
           <div>
-            <div style={{ fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 16, color: "white" }}>Consolation Prize!</div>
-            <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 13, color: "rgba(255,255,255,0.62)" }}>🪙 +50 coins · ⭐ +100 XP · Keep it up!</div>
+            <div style={{ fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 16, color: "white" }}>Consolation Prize!</div>
+            <div style={{ fontFamily: "General Sans, sans-serif", fontSize: 13, color: "rgba(255,255,255,0.62)" }}>🪙 +50 coins · ⭐ +100 XP · Keep it up!</div>
           </div>
         </div>
 
-        <button onClick={() => go("lobby")} style={{ width: "100%", padding: "16px 0", borderRadius: 22, background: "linear-gradient(135deg,#8B5CF6,#EC4899)", fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 22, color: "white", border: "none", cursor: "pointer", boxShadow: "0 8px 36px #8B5CF648", marginBottom: 10 }}>
+        <button onClick={() => go("lobby")} style={{ width: "100%", padding: "16px 0", borderRadius: 22, background: "linear-gradient(135deg,#8B5CF6,#EC4899)", fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 22, color: "white", border: "none", cursor: "pointer", boxShadow: "0 8px 36px #8B5CF648", marginBottom: 10 }}>
           Try Again 💪
         </button>
-        <button onClick={() => go("home")} style={{ width: "100%", padding: "14px 0", borderRadius: 22, background: "rgba(255,255,255,0.07)", fontFamily: "Fredoka, sans-serif", fontWeight: 600, fontSize: 18, color: "rgba(255,255,255,0.72)", border: "2px solid rgba(255,255,255,0.1)", cursor: "pointer" }}>
+        <button onClick={() => go("home")} style={{ width: "100%", padding: "14px 0", borderRadius: 22, background: "rgba(255,255,255,0.07)", fontFamily: "Fraunces, serif", fontWeight: 600, fontSize: 18, color: "rgba(255,255,255,0.72)", border: "2px solid rgba(255,255,255,0.1)", cursor: "pointer" }}>
           Back to Home
         </button>
       </div>
@@ -752,18 +752,18 @@ function ShopScreen({ go }: { go: (s: Screen) => void }) {
       <StatusBar />
       <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 14px 12px" }}>
         <BackBtn onClick={() => go("home")} />
-        <h2 style={{ fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 24, color: "white", flex: 1, margin: 0 }}>Shop 🛒</h2>
-        <Pill><span>🪙</span><span style={{ fontFamily: "Fredoka, sans-serif", color: "#FBBF24", fontWeight: 700, fontSize: 13 }}>4,250</span></Pill>
-        <Pill><span>💎</span><span style={{ fontFamily: "Fredoka, sans-serif", color: "#A5F3FC", fontWeight: 700, fontSize: 13 }}>120</span></Pill>
+        <h2 style={{ fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 24, color: "white", flex: 1, margin: 0 }}>Shop 🛒</h2>
+        <Pill><span>🪙</span><span style={{ fontFamily: "Fraunces, serif", color: "#D4AF6A", fontWeight: 700, fontSize: 13 }}>4,250</span></Pill>
+        <Pill><span>💎</span><span style={{ fontFamily: "Fraunces, serif", color: "#A5F3FC", fontWeight: 700, fontSize: 13 }}>120</span></Pill>
       </div>
 
       {/* Flash sale banner */}
-      <div style={{ margin: "0 14px 12px", padding: "14px 16px", borderRadius: 24, background: "linear-gradient(135deg,#FBBF24,#F59E0B 50%,#EC4899)", boxShadow: "0 8px 32px #FBBF2440" }}>
+      <div style={{ margin: "0 14px 12px", padding: "14px 16px", borderRadius: 24, background: "linear-gradient(135deg,#D4AF6A,#D4AF6A 50%,#EC4899)", boxShadow: "0 8px 32px #D4AF6A40" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div>
-            <div style={{ fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 20, color: "#1A0A2E" }}>🔥 Flash Sale!</div>
-            <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 13, color: "#78350F", marginBottom: 6 }}>Double coins — today only!</div>
-            <div style={{ fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 13, color: "#6D28D9" }}>⏰ 01:47:22 remaining</div>
+            <div style={{ fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 20, color: "#1A0A2E" }}>🔥 Flash Sale!</div>
+            <div style={{ fontFamily: "General Sans, sans-serif", fontSize: 13, color: "#78350F", marginBottom: 6 }}>Double coins — today only!</div>
+            <div style={{ fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 13, color: "#6D28D9" }}>⏰ 01:47:22 remaining</div>
           </div>
           <span style={{ fontSize: 48 }}>💰</span>
         </div>
@@ -772,7 +772,7 @@ function ShopScreen({ go }: { go: (s: Screen) => void }) {
       {/* Tabs */}
       <div style={{ display: "flex", gap: 8, padding: "0 14px 12px" }}>
         {tabs.map((t, i) => (
-          <button key={t} onClick={() => setTab(i)} style={{ flex: 1, padding: "8px 0", borderRadius: 100, fontFamily: "Fredoka, sans-serif", fontSize: 13, fontWeight: 700, background: tab === i ? "#7C3AED" : "#F0ECF8", color: tab === i ? "white" : "#4B5563", border: "none", cursor: "pointer" }}>{t}</button>
+          <button key={t} onClick={() => setTab(i)} style={{ flex: 1, padding: "8px 0", borderRadius: 100, fontFamily: "Fraunces, serif", fontSize: 13, fontWeight: 700, background: tab === i ? "#7C3AED" : "#F0ECF8", color: tab === i ? "white" : "#4B5563", border: "none", cursor: "pointer" }}>{t}</button>
         ))}
       </div>
 
@@ -781,12 +781,12 @@ function ShopScreen({ go }: { go: (s: Screen) => void }) {
         {items[tab].map(item => (
           <div key={item.n} style={{ borderRadius: 22, padding: "16px 14px", background: "white", boxShadow: "0 2px 14px rgba(0,0,0,0.06)", position: "relative" }}>
             {item.b && (
-              <div style={{ position: "absolute", top: -9, right: 10, padding: "2px 8px", borderRadius: 100, background: badgeCol(item.b), color: "white", fontFamily: "Nunito, sans-serif", fontWeight: 900, fontSize: 9 }}>{item.b}</div>
+              <div style={{ position: "absolute", top: -9, right: 10, padding: "2px 8px", borderRadius: 100, background: badgeCol(item.b), color: "white", fontFamily: "General Sans, sans-serif", fontWeight: 900, fontSize: 9 }}>{item.b}</div>
             )}
             <span style={{ fontSize: 36, display: "block", marginBottom: 8 }}>{item.e}</span>
-            <div style={{ fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 15, color: "#1A0A2E", marginBottom: 2 }}>{item.n}</div>
-            <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 11, color: "#9CA3AF", marginBottom: 12 }}>{item.a}</div>
-            <button style={{ width: "100%", padding: "8px 0", borderRadius: 14, background: "linear-gradient(135deg,#7C3AED,#EC4899)", color: "white", fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 14, border: "none", cursor: "pointer" }}>
+            <div style={{ fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 15, color: "#1A0A2E", marginBottom: 2 }}>{item.n}</div>
+            <div style={{ fontFamily: "General Sans, sans-serif", fontSize: 11, color: "#9CA3AF", marginBottom: 12 }}>{item.a}</div>
+            <button style={{ width: "100%", padding: "8px 0", borderRadius: 14, background: "linear-gradient(135deg,#7C3AED,#EC4899)", color: "white", fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 14, border: "none", cursor: "pointer" }}>
               {item.p}
             </button>
           </div>
@@ -812,30 +812,30 @@ function ProfileScreen({ go }: { go: (s: Screen) => void }) {
       <StatusBar />
       <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "4px 16px 8px" }}>
         <BackBtn onClick={() => go("home")} />
-        <h2 style={{ fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 24, color: "white", flex: 1, margin: 0 }}>Profile</h2>
+        <h2 style={{ fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 24, color: "white", flex: 1, margin: 0 }}>Profile</h2>
         <Settings size={20} color="rgba(255,255,255,0.78)" style={{ cursor: "pointer" }} />
       </div>
 
       {/* Avatar */}
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", paddingBottom: 16 }}>
         <div style={{ position: "relative", marginBottom: 10 }}>
-          <div style={{ width: 88, height: 88, borderRadius: "50%", background: "linear-gradient(135deg,#FBBF24,#EC4899)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 48, border: "4px solid white", boxShadow: "0 4px 22px rgba(0,0,0,0.22)" }}>🦊</div>
+          <div style={{ width: 88, height: 88, borderRadius: "50%", background: "linear-gradient(135deg,#D4AF6A,#EC4899)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 48, border: "4px solid white", boxShadow: "0 4px 22px rgba(0,0,0,0.22)" }}>🦊</div>
           <div style={{ position: "absolute", bottom: 0, right: 0, width: 28, height: 28, borderRadius: "50%", background: "#7C3AED", display: "flex", alignItems: "center", justifyContent: "center", border: "2.5px solid white" }}>
-            <span style={{ fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 12, color: "white" }}>24</span>
+            <span style={{ fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 12, color: "white" }}>24</span>
           </div>
         </div>
-        <div style={{ fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 22, color: "white" }}>StarPlayer99</div>
-        <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 13, color: "rgba(255,255,255,0.62)" }}>Bingo Master · Member since 2023</div>
+        <div style={{ fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 22, color: "white" }}>StarPlayer99</div>
+        <div style={{ fontFamily: "General Sans, sans-serif", fontSize: 13, color: "rgba(255,255,255,0.62)" }}>Bingo Master · Member since 2023</div>
       </div>
 
       {/* XP bar */}
       <div style={{ margin: "0 16px 14px", padding: "14px 18px", borderRadius: 22, background: "rgba(255,255,255,0.14)", backdropFilter: "blur(8px)" }}>
         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-          <span style={{ fontFamily: "Nunito, sans-serif", fontSize: 13, color: "rgba(255,255,255,0.82)", fontWeight: 700 }}>Level 24</span>
-          <span style={{ fontFamily: "Nunito, sans-serif", fontSize: 13, color: "rgba(255,255,255,0.62)" }}>7,840 / 10,000 XP</span>
+          <span style={{ fontFamily: "General Sans, sans-serif", fontSize: 13, color: "rgba(255,255,255,0.82)", fontWeight: 700 }}>Level 24</span>
+          <span style={{ fontFamily: "General Sans, sans-serif", fontSize: 13, color: "rgba(255,255,255,0.62)" }}>7,840 / 10,000 XP</span>
         </div>
         <div style={{ width: "100%", borderRadius: 100, height: 10, background: "rgba(255,255,255,0.18)" }}>
-          <div style={{ width: "78%", height: 10, borderRadius: 100, background: "linear-gradient(90deg,#FBBF24,#EC4899)" }} />
+          <div style={{ width: "78%", height: 10, borderRadius: 100, background: "linear-gradient(90deg,#D4AF6A,#EC4899)" }} />
         </div>
       </div>
 
@@ -848,30 +848,30 @@ function ProfileScreen({ go }: { go: (s: Screen) => void }) {
         ].map(s => (
           <div key={s.l} style={{ padding: "12px 8px", borderRadius: 20, textAlign: "center", background: "white", boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
             <div style={{ fontSize: 22, marginBottom: 4 }}>{s.e}</div>
-            <div style={{ fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 18, color: "#4C1D95" }}>{s.v}</div>
-            <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 10, color: "#9CA3AF" }}>{s.l}</div>
+            <div style={{ fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 18, color: "#4C1D95" }}>{s.v}</div>
+            <div style={{ fontFamily: "General Sans, sans-serif", fontSize: 10, color: "#9CA3AF" }}>{s.l}</div>
           </div>
         ))}
       </div>
 
       {/* Card theme picker */}
       <div style={{ margin: "0 16px 12px", padding: "16px", borderRadius: 22, background: "white", boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
-        <div style={{ fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 16, color: "#1A0A2E", marginBottom: 10 }}>Card Theme</div>
+        <div style={{ fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 16, color: "#1A0A2E", marginBottom: 10 }}>Card Theme</div>
         <div style={{ display: "flex", gap: 8 }}>
           {themes.map((t, i) => (
-            <button key={i} onClick={() => setTheme(i)} style={{ flex: 1, padding: "10px 0", borderRadius: 14, fontSize: 18, background: theme === i ? "#7C3AED" : "#F3F0FF", border: theme === i ? "2px solid #FBBF24" : "2px solid transparent", cursor: "pointer" }}>{t}</button>
+            <button key={i} onClick={() => setTheme(i)} style={{ flex: 1, padding: "10px 0", borderRadius: 14, fontSize: 18, background: theme === i ? "#7C3AED" : "#F3F0FF", border: theme === i ? "2px solid #D4AF6A" : "2px solid transparent", cursor: "pointer" }}>{t}</button>
           ))}
         </div>
       </div>
 
       {/* Achievements */}
       <div style={{ margin: "0 16px 24px", padding: "16px", borderRadius: 22, background: "white", boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
-        <div style={{ fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 16, color: "#1A0A2E", marginBottom: 12 }}>Achievements</div>
+        <div style={{ fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 16, color: "#1A0A2E", marginBottom: 12 }}>Achievements</div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10 }}>
           {badges.map((b, i) => (
             <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
               <div style={{ width: "100%", aspectRatio: "1", borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "center", background: b.u ? "#7C3AED14" : "#F3F4F6", fontSize: 26, border: b.u ? "2px solid #7C3AED28" : "2px solid #E5E7EB", opacity: b.u ? 1 : 0.36 }}>{b.e}</div>
-              <span style={{ fontFamily: "Nunito, sans-serif", fontSize: 9, color: b.u ? "#6D28D9" : "#9CA3AF", textAlign: "center", fontWeight: 700 }}>{b.l}</span>
+              <span style={{ fontFamily: "General Sans, sans-serif", fontSize: 9, color: b.u ? "#6D28D9" : "#9CA3AF", textAlign: "center", fontWeight: 700 }}>{b.l}</span>
             </div>
           ))}
         </div>
@@ -898,15 +898,15 @@ function DailyScreen({ go }: { go: (s: Screen) => void }) {
       <StatusBar />
       <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "4px 16px 12px" }}>
         <BackBtn onClick={() => go("home")} />
-        <h2 style={{ fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 24, color: "white", flex: 1, margin: 0 }}>Daily Rewards 🎁</h2>
+        <h2 style={{ fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 24, color: "white", flex: 1, margin: 0 }}>Daily Rewards 🎁</h2>
       </div>
 
       {/* Streak banner */}
       <div style={{ margin: "0 16px 14px", padding: "14px 18px", borderRadius: 22, display: "flex", alignItems: "center", gap: 14, background: "rgba(255,255,255,0.14)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.2)" }}>
         <span style={{ fontSize: 40 }}>🔥</span>
         <div>
-          <div style={{ fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 19, color: "white" }}>7-Day Streak!</div>
-          <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 13, color: "rgba(255,255,255,0.65)" }}>Keep it up to earn bonus rewards!</div>
+          <div style={{ fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 19, color: "white" }}>7-Day Streak!</div>
+          <div style={{ fontFamily: "General Sans, sans-serif", fontSize: 13, color: "rgba(255,255,255,0.65)" }}>Keep it up to earn bonus rewards!</div>
         </div>
       </div>
 
@@ -916,13 +916,13 @@ function DailyScreen({ go }: { go: (s: Screen) => void }) {
           <div key={day.d} style={{
             borderRadius: 20, padding: "11px 8px", display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
             background: day.today ? "white" : day.done ? "rgba(16,185,129,0.18)" : day.locked ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.1)",
-            border: day.today ? `3px solid ${claimed ? "#10B981" : "#FBBF24"}` : day.special ? "2px solid rgba(251,191,36,0.45)" : "2px solid transparent",
+            border: day.today ? `3px solid ${claimed ? "#10B981" : "#D4AF6A"}` : day.special ? "2px solid rgba(251,191,36,0.45)" : "2px solid transparent",
             boxShadow: day.today ? "0 4px 22px rgba(251,191,36,0.42)" : "none",
             opacity: day.locked ? 0.55 : 1,
           }}>
-            <span style={{ fontFamily: "Nunito, sans-serif", fontSize: 9, fontWeight: 800, color: day.today ? "#7C3AED" : "rgba(255,255,255,0.52)", letterSpacing: 0.5 }}>DAY {day.d}</span>
+            <span style={{ fontFamily: "General Sans, sans-serif", fontSize: 9, fontWeight: 800, color: day.today ? "#7C3AED" : "rgba(255,255,255,0.52)", letterSpacing: 0.5 }}>DAY {day.d}</span>
             <span style={{ fontSize: 22, lineHeight: 1.2 }}>{day.locked ? "🔒" : day.e}</span>
-            <span style={{ fontFamily: "Fredoka, sans-serif", fontSize: 11, fontWeight: 700, color: day.today ? "#4C1D95" : "rgba(255,255,255,0.8)", textAlign: "center" }}>
+            <span style={{ fontFamily: "Fraunces, serif", fontSize: 11, fontWeight: 700, color: day.today ? "#4C1D95" : "rgba(255,255,255,0.8)", textAlign: "center" }}>
               {day.locked ? "Locked" : day.r}
             </span>
             {(day.done || (day.today && claimed)) && (
@@ -931,7 +931,7 @@ function DailyScreen({ go }: { go: (s: Screen) => void }) {
               </div>
             )}
             {day.today && !claimed && (
-              <span style={{ fontFamily: "Nunito, sans-serif", fontSize: 8, color: "#EC4899", fontWeight: 900, marginTop: 1, letterSpacing: 0.3 }}>TODAY!</span>
+              <span style={{ fontFamily: "General Sans, sans-serif", fontSize: 8, color: "#EC4899", fontWeight: 900, marginTop: 1, letterSpacing: 0.3 }}>TODAY!</span>
             )}
           </div>
         ))}
@@ -939,12 +939,12 @@ function DailyScreen({ go }: { go: (s: Screen) => void }) {
 
       {/* Today's reward highlight */}
       <div style={{ margin: "0 16px 14px", padding: "18px 20px", borderRadius: 26, background: "white", boxShadow: "0 8px 36px rgba(0,0,0,0.1)" }}>
-        <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 12, color: "#9CA3AF", marginBottom: 10 }}>Today's Reward</div>
+        <div style={{ fontFamily: "General Sans, sans-serif", fontSize: 12, color: "#9CA3AF", marginBottom: 10 }}>Today's Reward</div>
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <div style={{ width: 58, height: 58, borderRadius: 18, background: "linear-gradient(135deg,#FBBF24,#F59E0B)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, flexShrink: 0 }}>🪙</div>
+          <div style={{ width: 58, height: 58, borderRadius: 18, background: "linear-gradient(135deg,#D4AF6A,#D4AF6A)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, flexShrink: 0 }}>🪙</div>
           <div>
-            <div style={{ fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 26, color: "#4C1D95", lineHeight: 1.1 }}>300 Coins</div>
-            <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 13, color: "#6B7280" }}>Day 5 reward · Come back tomorrow!</div>
+            <div style={{ fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 26, color: "#4C1D95", lineHeight: 1.1 }}>300 Coins</div>
+            <div style={{ fontFamily: "General Sans, sans-serif", fontSize: 13, color: "#6B7280" }}>Day 5 reward · Come back tomorrow!</div>
           </div>
         </div>
       </div>
@@ -952,11 +952,11 @@ function DailyScreen({ go }: { go: (s: Screen) => void }) {
       <div style={{ padding: "0 16px 24px" }}>
         <button onClick={() => !claimed && setClaimed(true)} style={{
           width: "100%", padding: "17px 0", borderRadius: 28,
-          background: claimed ? "#D1FAE5" : "linear-gradient(135deg,#FBBF24,#F59E0B)",
+          background: claimed ? "#D1FAE5" : "linear-gradient(135deg,#D4AF6A,#D4AF6A)",
           color: claimed ? "#065F46" : "#1A0A2E",
-          fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 22,
+          fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 22,
           border: "none", cursor: claimed ? "default" : "pointer",
-          boxShadow: claimed ? "none" : "0 8px 36px #FBBF2458",
+          boxShadow: claimed ? "none" : "0 8px 36px #D4AF6A58",
         }}>
           {claimed ? "✓  Reward Claimed!" : "Claim Reward 🎁"}
         </button>
@@ -989,7 +989,7 @@ function WalletChip() {
   async function disconnect() { await disconnectWallet(); setAddr(null); setBal(null); }
 
   const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
-  const base = { display: "flex", alignItems: "center", gap: 8, margin: "0 16px 12px", padding: "10px 14px", borderRadius: 16, fontFamily: "Nunito, sans-serif", fontSize: 12 } as const;
+  const base = { display: "flex", alignItems: "center", gap: 8, margin: "0 16px 12px", padding: "10px 14px", borderRadius: 16, fontFamily: "General Sans, sans-serif", fontSize: 12 } as const;
 
   if (addr) {
     return (
@@ -997,7 +997,7 @@ function WalletChip() {
         <span style={{ fontSize: 14 }}>🦊</span>
         <span style={{ fontWeight: 800 }}>{short(addr)}</span>
         <span style={{ opacity: 0.75 }}>· {bal ?? "— CNPY"}</span>
-        <button onClick={disconnect} style={{ marginLeft: "auto", background: "rgba(255,255,255,0.14)", border: "none", color: "white", borderRadius: 10, padding: "4px 10px", cursor: "pointer", fontFamily: "Nunito, sans-serif", fontWeight: 700, fontSize: 11 }}>Disconnect</button>
+        <button onClick={disconnect} style={{ marginLeft: "auto", background: "rgba(255,255,255,0.14)", border: "none", color: "white", borderRadius: 10, padding: "4px 10px", cursor: "pointer", fontFamily: "General Sans, sans-serif", fontWeight: 700, fontSize: 11 }}>Disconnect</button>
       </div>
     );
   }
@@ -1006,7 +1006,7 @@ function WalletChip() {
       <button onClick={connect} disabled={!avail || busy} style={{
         padding: "10px 0", borderRadius: 12, border: "none", cursor: avail && !busy ? "pointer" : "default",
         background: avail ? "linear-gradient(135deg,#6366F1,#8B5CF6)" : "rgba(255,255,255,0.12)",
-        color: "white", fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 14,
+        color: "white", fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 14,
       }}>
         {busy ? "Connecting…" : avail ? "🦊 Connect FleetWallet" : "FleetWallet not detected"}
       </button>
@@ -1066,19 +1066,19 @@ function LiveScreen({ go }: { go: (s: Screen) => void }) {
       <StatusBar />
       <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "4px 16px 10px" }}>
         <BackBtn onClick={() => go("home")} />
-        <h2 style={{ fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 22, color: "white", flex: 1, margin: 0 }}>Live ⛓️ On-Chain</h2>
+        <h2 style={{ fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 22, color: "white", flex: 1, margin: 0 }}>Live ⛓️ On-Chain</h2>
       </div>
 
       <div style={{ margin: "0 16px 12px", padding: "10px 14px", borderRadius: 16, background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)" }}>
-        <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.72)" }}>{msg}</div>
-        <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 10, color: "rgba(255,255,255,0.4)", marginTop: 4 }}>backend: {apiBase}</div>
+        <div style={{ fontFamily: "General Sans, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.72)" }}>{msg}</div>
+        <div style={{ fontFamily: "General Sans, sans-serif", fontSize: 10, color: "rgba(255,255,255,0.4)", marginTop: 4 }}>backend: {apiBase}</div>
       </div>
 
       <WalletChip />
 
       {/* Current ball */}
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "6px 0" }}>
-        <span style={{ fontFamily: "Nunito, sans-serif", fontSize: 10, color: "rgba(255,255,255,0.42)", letterSpacing: 2, textTransform: "uppercase", marginBottom: 6 }}>
+        <span style={{ fontFamily: "General Sans, sans-serif", fontSize: 10, color: "rgba(255,255,255,0.42)", letterSpacing: 2, textTransform: "uppercase", marginBottom: 6 }}>
           {count ? `Ball ${count}` : "Ready"}
         </span>
         {ball ? <BingoBall letter={ball.l} number={ball.n} size={82} /> : (
@@ -1094,11 +1094,11 @@ function LiveScreen({ go }: { go: (s: Screen) => void }) {
       {/* Winners / payouts */}
       {Object.keys(payouts).length > 0 && (
         <div style={{ margin: "0 16px 14px", padding: "12px 16px", borderRadius: 20, background: "rgba(16,185,129,0.14)", border: "1px solid rgba(16,185,129,0.3)" }}>
-          <div style={{ fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 15, color: "#A7F3D0", marginBottom: 8 }}>🏆 Settlement (on-chain)</div>
+          <div style={{ fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 15, color: "#A7F3D0", marginBottom: 8 }}>🏆 Settlement (on-chain)</div>
           {Object.entries(payouts).sort((a, b) => b[1] - a[1]).map(([addr, amt]) => (
-            <div key={addr} style={{ display: "flex", justifyContent: "space-between", padding: "3px 0", fontFamily: "Nunito, sans-serif", fontSize: 13, color: "white" }}>
+            <div key={addr} style={{ display: "flex", justifyContent: "space-between", padding: "3px 0", fontFamily: "General Sans, sans-serif", fontSize: 13, color: "white" }}>
               <span style={{ opacity: 0.8 }}>{short(addr)}{winners.includes(addr) ? " 👑" : ""}</span>
-              <span style={{ fontWeight: 800, color: amt > 0 ? "#FBBF24" : "rgba(255,255,255,0.4)" }}>🪙 {coins(amt)}</span>
+              <span style={{ fontWeight: 800, color: amt > 0 ? "#D4AF6A" : "rgba(255,255,255,0.4)" }}>🪙 {coins(amt)}</span>
             </div>
           ))}
         </div>
@@ -1108,13 +1108,13 @@ function LiveScreen({ go }: { go: (s: Screen) => void }) {
         <button onClick={start} disabled={status === "running"} style={{
           width: "100%", padding: "16px 0", borderRadius: 22,
           background: status === "running" ? "rgba(255,255,255,0.14)" : "linear-gradient(135deg,#8B5CF6,#EC4899)",
-          color: "white", fontFamily: "Fredoka, sans-serif", fontWeight: 700, fontSize: 20,
+          color: "white", fontFamily: "Fraunces, serif", fontWeight: 700, fontSize: 20,
           border: "none", cursor: status === "running" ? "default" : "pointer", boxShadow: "0 8px 30px #8B5CF640",
         }}>
           {status === "running" ? "Playing…" : status === "settled" ? "Play Again ⛓️" : "Start Real Game ⛓️"}
         </button>
         {status === "error" && (
-          <div style={{ marginTop: 10, fontFamily: "Nunito, sans-serif", fontSize: 12, color: "#FCA5A5", textAlign: "center" }}>{msg}</div>
+          <div style={{ marginTop: 10, fontFamily: "General Sans, sans-serif", fontSize: 12, color: "#FCA5A5", textAlign: "center" }}>{msg}</div>
         )}
       </div>
     </PhoneScreen>
@@ -1144,8 +1144,8 @@ export default function App() {
           40%            { transform: scale(1.1); opacity: 1;   }
         }
         @keyframes pulse {
-          0%, 100% { box-shadow: 0 0 80px #FBBF2475, 0 20px 56px rgba(0,0,0,0.45); }
-          50%       { box-shadow: 0 0 120px #FBBF24AA, 0 20px 56px rgba(0,0,0,0.45); }
+          0%, 100% { box-shadow: 0 0 80px #D4AF6A75, 0 20px 56px rgba(0,0,0,0.45); }
+          50%       { box-shadow: 0 0 120px #D4AF6AAA, 0 20px 56px rgba(0,0,0,0.45); }
         }
         @keyframes confetti {
           0%   { transform: translateY(0)   rotate(0deg);   opacity: 0.9; }
