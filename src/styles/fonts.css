@@ -1,1 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;500;600;700;800;900&display=swap');
+/* Casino Rush — see DESIGN.md. Fraunces (display/hero) + General Sans (body/UI),
+   replacing Fredoka/Nunito: rounded/bubbly type read as a casual mobile game,
+   working against the "premium casino" design goal. */
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,450;9..144,500;9..144,600;9..144,700&display=swap');
+@import url('https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&display=swap');

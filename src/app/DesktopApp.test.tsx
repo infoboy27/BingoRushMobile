@@ -48,7 +48,7 @@ describe("DesktopApp shell view persistence", () => {
 
   it("defaults to Home when nothing is saved", async () => {
     render(<DesktopApp />);
-    expect(await screen.findByText(/Welcome to Bingo Rush/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Welcome to Casino Rush/i)).toBeInTheDocument();
   });
 
   it("restores the last-viewed section from sessionStorage after a reload", async () => {
@@ -60,7 +60,7 @@ describe("DesktopApp shell view persistence", () => {
   it("ignores a corrupted/unknown saved view and falls back to Home", async () => {
     sessionStorage.setItem("brView", "some-garbage-value");
     render(<DesktopApp />);
-    expect(await screen.findByText(/Welcome to Bingo Rush/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Welcome to Casino Rush/i)).toBeInTheDocument();
   });
 
   it("persists the current view to sessionStorage as the user navigates", async () => {

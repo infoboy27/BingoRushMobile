@@ -1,15 +1,16 @@
-// Desktop / web layout for Bingo Rush — same brand as the mobile mockup
-// (Fredoka + Nunito, purple/gold palette, B-I-N-G-O balls) but laid out for wide
-// screens. Wired to the real backend (rooms, on-chain round, live WebSocket
-// draw, on-chain settle) and FleetWallet, reusing src/lib/api.ts + wallet.ts.
+// Desktop / web layout for Casino Rush (see DESIGN.md) — Fraunces + General
+// Sans, near-black surfaces with gold as the precious accent and violet
+// demoted to sparing glows, B-I-N-G-O balls — laid out for wide screens.
+// Wired to the real backend (rooms, on-chain round, live WebSocket draw,
+// on-chain settle) and FleetWallet, reusing src/lib/api.ts + wallet.ts.
 
 import { useEffect, useRef, useState } from "react";
 import { apiBase, createRound, joinRound, roundSocket, chatSocket, getRooms, getRoundInfo, getCard, registerRound, entryCost, getNetwork, getCosmeticsShop, getGems, topupGems, getWallet, getPlayerStats, getPlayerHistory, getLeaderboard, type Room, type CosmeticItem, type WalletInfo, type PlayerStats, type RoundHistoryEntry, type LeaderboardPeriod, type LeaderboardEntry } from "../lib/api";
 import { waitForFleet, connectWallet, tryReconnect, walletBalance, disconnectWallet, hasFleet, bingoJoin, buyCosmetic, WALLET_METHOD_MISSING } from "../lib/wallet";
 
 const COLS = ["B", "I", "N", "G", "O"];
-const COL_COLORS = ["#3B82F6", "#EC4899", "#10B981", "#F59E0B", "#8B5CF6"];
-const ROOM_COLORS = ["#3B82F6", "#EC4899", "#F59E0B", "#8B5CF6"];
+const COL_COLORS = ["#3B82F6", "#EC4899", "#10B981", "#D4AF6A", "#8B5CF6"];
+const ROOM_COLORS = ["#3B82F6", "#EC4899", "#D4AF6A", "#8B5CF6"];
 
 const MOCK_ROOMS: Room[] = [
   { id: "classic", name: "Classic Room", emoji: "🎱", entryFee: 100, capacity: 20, difficulty: "Easy", advertisedPrize: 2500, rakeBps: 1000, payoutWeightsBps: [10000] },
@@ -18,8 +19,8 @@ const MOCK_ROOMS: Room[] = [
   { id: "vip", name: "VIP Lounge", emoji: "👑", entryFee: 1000, capacity: 10, difficulty: "Elite", advertisedPrize: 50000, rakeBps: 500, payoutWeightsBps: [6000, 2500, 1500] },
 ];
 
-const F = "Fredoka, sans-serif";
-const N = "Nunito, sans-serif";
+const F = "Fraunces, serif";
+const N = "General Sans, sans-serif";
 
 function Ball({ letter, number, size = 84, dim = false }: { letter: string; number: number | string; size?: number; dim?: boolean }) {
   const col = COL_COLORS[COLS.indexOf(letter)] ?? "#8B5CF6";
@@ -108,7 +109,7 @@ function SkinsModal({ walletAddr, onClose }: { walletAddr: string | null; onClos
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50 }} onClick={onClose}>
-      <div onClick={e => e.stopPropagation()} style={{ background: "#1E1B4B", borderRadius: 24, padding: 26, width: 480, maxWidth: "92vw", maxHeight: "82vh", overflowY: "auto", border: "1px solid rgba(255,255,255,0.1)", color: "white", fontFamily: N }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: "#14151F", borderRadius: 20, padding: 26, width: 480, maxWidth: "92vw", maxHeight: "82vh", overflowY: "auto", border: "1px solid rgba(255,255,255,0.1)", color: "white", fontFamily: N }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
           <h2 style={{ fontFamily: F, margin: 0, fontSize: 22 }}>🎨 Card Skins</h2>
           <button onClick={onClose} style={{ background: "none", border: "none", color: "white", fontSize: 20, cursor: "pointer" }}>✕</button>
@@ -129,13 +130,13 @@ function SkinsModal({ walletAddr, onClose }: { walletAddr: string | null; onClos
             </button>
           </div>
         )}
-        {msg && <div style={{ fontSize: 12, color: "#FBBF24", marginBottom: 12 }}>{msg}</div>}
+        {msg && <div style={{ fontSize: 12, color: "#D4AF6A", marginBottom: 12 }}>{msg}</div>}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           {items.map(item => (
             <div key={item.id} style={{ borderRadius: 16, padding: 14, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}>
               <div style={{ fontSize: 30 }}>{item.emoji}</div>
               <div style={{ fontFamily: F, fontWeight: 700 }}>{item.name}</div>
-              {item.badge && <span style={{ fontSize: 10, color: "#FBBF24", fontWeight: 700 }}>{item.badge}</span>}
+              {item.badge && <span style={{ fontSize: 10, color: "#D4AF6A", fontWeight: 700 }}>{item.badge}</span>}
               <div style={{ fontSize: 13, opacity: 0.7, margin: "4px 0 10px" }}>💎 {item.priceGems} gems</div>
               <button disabled={!walletAddr || busyId === item.id} onClick={() => buy(item)} style={{
                 width: "100%", padding: "8px 0", borderRadius: 10, border: "none", cursor: walletAddr ? "pointer" : "default",
@@ -164,7 +165,7 @@ function WalletModal({ walletAddr, onClose }: { walletAddr: string | null; onClo
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50 }} onClick={onClose}>
-      <div onClick={e => e.stopPropagation()} style={{ background: "#1E1B4B", borderRadius: 24, padding: 26, width: 520, maxWidth: "92vw", maxHeight: "82vh", overflowY: "auto", border: "1px solid rgba(255,255,255,0.1)", color: "white", fontFamily: N }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: "#14151F", borderRadius: 20, padding: 26, width: 520, maxWidth: "92vw", maxHeight: "82vh", overflowY: "auto", border: "1px solid rgba(255,255,255,0.1)", color: "white", fontFamily: N }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <h2 style={{ fontFamily: F, margin: 0, fontSize: 22 }}>💼 Wallet</h2>
           <button onClick={onClose} style={{ background: "none", border: "none", color: "white", fontSize: 20, cursor: "pointer" }}>✕</button>
@@ -240,7 +241,7 @@ function ProfileModal({ walletAddr, onClose }: { walletAddr: string | null; onCl
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50 }} onClick={onClose}>
-      <div onClick={e => e.stopPropagation()} style={{ background: "#1E1B4B", borderRadius: 24, padding: 26, width: 460, maxWidth: "92vw", border: "1px solid rgba(255,255,255,0.1)", color: "white", fontFamily: N }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: "#14151F", borderRadius: 20, padding: 26, width: 460, maxWidth: "92vw", border: "1px solid rgba(255,255,255,0.1)", color: "white", fontFamily: N }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
           <h2 style={{ fontFamily: F, margin: 0, fontSize: 22 }}>👤 Profile</h2>
           <button onClick={onClose} style={{ background: "none", border: "none", color: "white", fontSize: 20, cursor: "pointer" }}>✕</button>
@@ -257,7 +258,7 @@ function ProfileModal({ walletAddr, onClose }: { walletAddr: string | null; onCl
         {walletAddr && stats && (
           <>
             <div style={{ display: "flex", alignItems: "center", gap: 14, margin: "18px 0" }}>
-              <div style={{ width: 56, height: 56, borderRadius: 16, background: "linear-gradient(135deg,#FBBF24,#8B5CF6)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: F, fontWeight: 700, fontSize: 20 }}>
+              <div style={{ width: 56, height: 56, borderRadius: 16, background: "linear-gradient(135deg,#D4AF6A,#8B5CF6)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: F, fontWeight: 700, fontSize: 20 }}>
                 {levelFor(stats.gamesPlayed)}
               </div>
               <div>
@@ -310,7 +311,7 @@ const STAGE_STEP: Record<EscrowStage, number> = {
 const STAGE_META: Record<EscrowStage, { icon: string; color: string; label: string }> = {
   idle: { icon: "", color: "#8B5CF6", label: "" },
   opening: { icon: "⏳", color: "#8B5CF6", label: "Opening round on-chain" },
-  "awaiting-signature": { icon: "🦊", color: "#F59E0B", label: "Approve the join in your wallet" },
+  "awaiting-signature": { icon: "🦊", color: "#D4AF6A", label: "Approve the join in your wallet" },
   pending: { icon: "⏳", color: "#8B5CF6", label: "Escrowing your entry on-chain" },
   confirmed: { icon: "✅", color: "#34D399", label: "Confirmed" },
   insufficient: { icon: "⚠️", color: "#F87171", label: "Insufficient balance to join this room" },
@@ -443,7 +444,7 @@ function Sidebar({ view, setView }: { view: ShellView; setView: (v: ShellView) =
       {items.map(it => (
         <button key={it.key} onClick={() => setView(it.key)} style={{
           display: "flex", alignItems: "center", gap: 10, padding: "11px 14px", borderRadius: 12, border: "none", cursor: "pointer",
-          background: view === it.key ? "rgba(251,191,36,0.14)" : "transparent", color: view === it.key ? "#FBBF24" : "rgba(255,255,255,0.75)",
+          background: view === it.key ? "rgba(251,191,36,0.14)" : "transparent", color: view === it.key ? "#D4AF6A" : "rgba(255,255,255,0.75)",
           fontFamily: F, fontWeight: 700, fontSize: 14, textAlign: "left",
         }}>
           <span>{it.icon}</span><span>{it.label}</span>
@@ -465,13 +466,13 @@ function Sidebar({ view, setView }: { view: ShellView; setView: (v: ShellView) =
 function HomeView({ onPlay, onGames }: { onPlay: () => void; onGames: () => void }) {
   return (
     <div style={{ padding: "48px 40px" }}>
-      <h1 style={{ fontFamily: F, fontWeight: 700, fontSize: 42, margin: 0 }}>Welcome to Bingo Rush</h1>
+      <h1 style={{ fontFamily: F, fontWeight: 700, fontSize: 42, margin: 0 }}>Welcome to Casino Rush</h1>
       <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 15, marginTop: 10, maxWidth: 520 }}>
         Provably-fair multiplayer bingo, settled on-chain. Every round's seed is committed
         before you play and revealed at settle — you can verify every win yourself.
       </p>
       <div style={{ display: "flex", gap: 12, marginTop: 24 }}>
-        <button onClick={onPlay} style={{ padding: "13px 26px", borderRadius: 14, border: "none", cursor: "pointer", background: "linear-gradient(135deg,#FBBF24,#F59E0B)", color: "#1A1305", fontFamily: F, fontWeight: 700, fontSize: 15 }}>Play Bingo ▶</button>
+        <button onClick={onPlay} style={{ padding: "13px 26px", borderRadius: 14, border: "none", cursor: "pointer", background: "linear-gradient(135deg,#D4AF6A,#D4AF6A)", color: "#1A1305", fontFamily: F, fontWeight: 700, fontSize: 15 }}>Play Bingo ▶</button>
         <button onClick={onGames} style={{ padding: "13px 26px", borderRadius: 14, border: "1px solid rgba(255,255,255,0.15)", cursor: "pointer", background: "rgba(255,255,255,0.06)", color: "white", fontFamily: F, fontWeight: 700, fontSize: 15 }}>Browse Games</button>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px,1fr))", gap: 16, marginTop: 40, maxWidth: 760 }}>
@@ -499,7 +500,7 @@ function GamesLobbyView({ onPlayBingo }: { onPlayBingo: () => void }) {
             <button onClick={g.status === "live" ? onPlayBingo : undefined} disabled={g.status !== "live"} style={{
               width: "100%", marginTop: 14, padding: "10px 0", borderRadius: 12, border: "none",
               cursor: g.status === "live" ? "pointer" : "not-allowed",
-              background: g.status === "live" ? "linear-gradient(135deg,#FBBF24,#F59E0B)" : "rgba(255,255,255,0.06)",
+              background: g.status === "live" ? "linear-gradient(135deg,#D4AF6A,#D4AF6A)" : "rgba(255,255,255,0.06)",
               color: g.status === "live" ? "#1A1305" : "rgba(255,255,255,0.35)", fontFamily: F, fontWeight: 700, fontSize: 14,
             }}>{g.status === "live" ? "Play ▶" : "Coming Soon"}</button>
           </div>
@@ -534,7 +535,7 @@ function LeaderboardView() {
           <button key={t.key} onClick={() => setPeriod(t.key)} style={{
             padding: "8px 16px", borderRadius: 100, border: "none", cursor: "pointer",
             background: period === t.key ? "rgba(251,191,36,0.18)" : "rgba(255,255,255,0.05)",
-            color: period === t.key ? "#FBBF24" : "rgba(255,255,255,0.6)", fontFamily: F, fontWeight: 700, fontSize: 13,
+            color: period === t.key ? "#D4AF6A" : "rgba(255,255,255,0.6)", fontFamily: F, fontWeight: 700, fontSize: 13,
           }}>{t.label}</button>
         ))}
       </div>
@@ -543,7 +544,7 @@ function LeaderboardView() {
       <div style={{ display: "flex", flexDirection: "column", gap: 8, maxWidth: 640 }}>
         {rows.map((r, i) => (
           <div key={r.address} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 16px", borderRadius: 14, background: i === 0 ? "rgba(251,191,36,0.1)" : "rgba(255,255,255,0.05)", border: i === 0 ? "1px solid rgba(251,191,36,0.3)" : "1px solid transparent" }}>
-            <div style={{ width: 26, fontFamily: F, fontWeight: 700, color: i === 0 ? "#FBBF24" : "rgba(255,255,255,0.5)" }}>#{i + 1}</div>
+            <div style={{ width: 26, fontFamily: F, fontWeight: 700, color: i === 0 ? "#D4AF6A" : "rgba(255,255,255,0.5)" }}>#{i + 1}</div>
             <div style={{ flex: 1, fontFamily: N, fontSize: 14 }}>{short(r.address)}</div>
             <div style={{ fontSize: 12, opacity: 0.5 }}>{r.gamesPlayed} games · {r.wins} wins</div>
             <div style={{ fontFamily: F, fontWeight: 700, color: "#34D399" }}>🪙 {coins(r.totalWon)}</div>
@@ -668,13 +669,13 @@ export default function DesktopApp() {
   function exit() { wsRef.current?.close(); setGame(null); setPending(null); setStage("idle"); }
 
   return (
-    <div style={{ minHeight: "100vh", background: "linear-gradient(160deg,#2E1065 0%,#1E1B4B 45%,#0F172A 100%)", color: "white", fontFamily: N }}>
+    <div style={{ minHeight: "100vh", background: "radial-gradient(ellipse 900px 500px at 50% -10%, rgba(109,40,217,0.16), transparent 70%), #0A0B14", color: "white", fontFamily: N }}>
       {/* Header */}
       <header style={{ display: "flex", alignItems: "center", gap: 16, padding: "18px 32px", borderBottom: "1px solid rgba(255,255,255,0.08)", position: "sticky", top: 0, backdropFilter: "blur(8px)", background: "rgba(15,23,42,0.55)", zIndex: 10 }}>
         <div onClick={exit} style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}>
-          <div style={{ width: 44, height: 44, borderRadius: 12, background: "linear-gradient(140deg,#FBBF24,#F59E0B)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, boxShadow: "0 0 30px #FBBF2455" }}>🎱</div>
+          <div style={{ width: 44, height: 44, borderRadius: 12, background: "linear-gradient(140deg,#D4AF6A,#D4AF6A)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, boxShadow: "0 0 30px #D4AF6A55" }}>🎱</div>
           <div>
-            <div style={{ fontFamily: F, fontWeight: 700, fontSize: 22, lineHeight: 1 }}>Bingo Rush</div>
+            <div style={{ fontFamily: F, fontWeight: 700, fontSize: 22, lineHeight: 1 }}>Casino Rush</div>
             <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)" }}>provably-fair · on-chain</div>
           </div>
         </div>
@@ -750,7 +751,7 @@ export default function DesktopApp() {
               {game.done && game.won ? (
                 <div style={{ textAlign: "center" }}>
                   <div style={{ fontSize: 40 }}>🏆</div>
-                  <div style={{ fontFamily: F, fontWeight: 700, fontSize: 30, color: "#FBBF24" }}>BINGO!</div>
+                  <div style={{ fontFamily: F, fontWeight: 700, fontSize: 30, color: "#D4AF6A" }}>BINGO!</div>
                   <div style={{ fontFamily: F, fontWeight: 700, fontSize: 18, marginTop: 4 }}>🪙 +{(game.wonCoins ?? 0).toLocaleString()} coins</div>
                   <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", marginTop: 4 }}>paid from escrow · on-chain ✓</div>
                 </div>
@@ -795,7 +796,7 @@ export default function DesktopApp() {
                     <button key={n} onClick={() => setNumCards(n)} style={{
                       width: 46, height: 46, borderRadius: 12, fontFamily: F, fontWeight: 700, fontSize: 20, cursor: "pointer",
                       background: numCards === n ? "white" : "rgba(255,255,255,0.1)", color: numCards === n ? "#6D28D9" : "white",
-                      border: numCards === n ? "3px solid #FBBF24" : "3px solid transparent",
+                      border: numCards === n ? "3px solid #D4AF6A" : "3px solid transparent",
                     }}>{n}</button>
                   ))}
                   <span style={{ color: "rgba(255,255,255,0.45)", fontSize: 13 }}>+{numCards * 8}% odds</span>
@@ -835,7 +836,7 @@ export default function DesktopApp() {
                         </div>
                         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 18 }}>
                           <div><div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)" }}>Entry</div><div style={{ fontFamily: F, fontWeight: 700, fontSize: 18 }}>🪙 {room.entryFee}</div></div>
-                          <div style={{ textAlign: "right" }}><div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)" }}>Max prize</div><div style={{ fontFamily: F, fontWeight: 700, fontSize: 18, color: "#FBBF24" }}>🪙 {Number(room.advertisedPrize).toLocaleString()}</div></div>
+                          <div style={{ textAlign: "right" }}><div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)" }}>Max prize</div><div style={{ fontFamily: F, fontWeight: 700, fontSize: 18, color: "#D4AF6A" }}>🪙 {Number(room.advertisedPrize).toLocaleString()}</div></div>
                         </div>
                         <button onClick={() => play(room)} disabled={busy} style={{
                           width: "100%", padding: "13px 0", borderRadius: 14, border: "none", cursor: busy ? "default" : "pointer",
